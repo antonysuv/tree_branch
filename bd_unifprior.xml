@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><beast beautitemplate='Standard' beautistatus='' namespace="beast.core:beast.evolution.alignment:beast.evolution.tree.coalescent:beast.core.util:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.evolution.likelihood" required="" version="2.6">
+
+
+    <data
+id="dummy"
+spec="Alignment"
+name="alignment">
+DUMMYDATA
+                </data>
+
+   
+<map name="Uniform" >beast.math.distributions.Uniform</map>
+<map name="Exponential" >beast.math.distributions.Exponential</map>
+<map name="LogNormal" >beast.math.distributions.LogNormalDistributionModel</map>
+<map name="Normal" >beast.math.distributions.Normal</map>
+<map name="Beta" >beast.math.distributions.Beta</map>
+<map name="Gamma" >beast.math.distributions.Gamma</map>
+<map name="LaplaceDistribution" >beast.math.distributions.LaplaceDistribution</map>
+<map name="prior" >beast.math.distributions.Prior</map>
+<map name="InverseGamma" >beast.math.distributions.InverseGamma</map>
+<map name="OneOnX" >beast.math.distributions.OneOnX</map>
+
+
+<run id="mcmc" spec="MCMC" chainLength="N_MCMC" numInitializationAttempts="100" preBurnin="1000000" sampleFromPrior="true" storeEvery="N_STORE_MCMC">
+    <state id="state" spec="State" storeEvery="N_STORE_MCMC">
+        <tree id="Tree.t:dummy" spec="beast.evolution.tree.Tree" name="stateNode">
+            <taxonset id="TaxonSet.dummy" spec="TaxonSet">
+                <alignment idref="dummy"/>
+            </taxonset>
+        </tree>
+        <parameter id="clockRate.c:dummy" spec="parameter.RealParameter" name="stateNode">1.0</parameter>
+    </state>
+
+    <init id="NewickTree.t:dummy" spec="beast.util.TreeParser" estimate="false" initial="@Tree.t:dummy" newick="STARTTREEWITHBL" taxa="@dummy"/>
+
+    <distribution id="posterior" spec="util.CompoundDistribution">
+        <distribution id="prior" spec="util.CompoundDistribution">
+            <distribution id="BirthDeath.t:dummy" spec="beast.evolution.speciation.BirthDeathGernhard08Model" tree="@Tree.t:dummy">
+                <parameter id="BDDeathRate.t:dummy" spec="parameter.RealParameter" estimate="false" lower="0.0" name="relativeDeathRate" upper="1.0">DEATHRATE</parameter>
+                <parameter id="BDBirthRate.t:dummy" spec="parameter.RealParameter" estimate="false" lower="0.0" name="birthDiffRate" upper="10000.0">BIRTHRATE</parameter>
+            </distribution>
+            <distribution id="MultiMonophyleticConstraint.t:dummy" spec="beast.math.distributions.MultiMonophyleticConstraint" isBinary="false" newick="FIXEDTREETOPO" tree="@Tree.t:dummy"/>
+            <prior id="ClockPrior.c:dummy" name="distribution" x="@clockRate.c:dummy">
+                <Uniform id="Uniform.0" name="distr" upper="Infinity"/>
+            </prior>
+            TAXA_LIST
+            PRIOR_LIST
+        </distribution>
+        <distribution id="likelihood" spec="util.CompoundDistribution" useThreads="true">
+            <distribution id="treeLikelihood.dummy" spec="ThreadedTreeLikelihood" data="@dummy" tree="@Tree.t:dummy">
+                <siteModel id="SiteModel.s:dummy" spec="SiteModel">
+                    <parameter id="mutationRate.s:dummy" spec="parameter.RealParameter" estimate="false" name="mutationRate">1.0</parameter>
+                    <parameter id="gammaShape.s:dummy" spec="parameter.RealParameter" estimate="false" name="shape">1.0</parameter>
+                    <parameter id="proportionInvariant.s:dummy" spec="parameter.RealParameter" estimate="false" lower="0.0" name="proportionInvariant" upper="1.0">0.0</parameter>
+                    <substModel id="JC69.s:dummy" spec="JukesCantor"/>
+                </siteModel>
+                <branchRateModel id="StrictClock.c:dummy" spec="beast.evolution.branchratemodel.StrictClockModel" clock.rate="@clockRate.c:dummy"/>
+            </distribution>
+        </distribution>
+    </distribution>
+
+    <operator id="BirthDeathTreeScaler.t:dummy" spec="ScaleOperator" scaleFactor="0.5" tree="@Tree.t:dummy" weight="3.0"/>
+
+    <operator id="BirthDeathTreeRootScaler.t:dummy" spec="ScaleOperator" rootOnly="true" scaleFactor="0.5" tree="@Tree.t:dummy" weight="3.0"/>
+
+    <operator id="BirthDeathUniformOperator.t:dummy" spec="Uniform" tree="@Tree.t:dummy" weight="30.0"/>
+
+    <operator id="BirthDeathSubtreeSlide.t:dummy" spec="SubtreeSlide" tree="@Tree.t:dummy" weight="15.0"/>
+
+    <operator id="BirthDeathNarrow.t:dummy" spec="Exchange" tree="@Tree.t:dummy" weight="0.0"/>
+
+    <operator id="BirthDeathWide.t:dummy" spec="Exchange" isNarrow="false" tree="@Tree.t:dummy" weight="3.0"/>
+
+    <operator id="BirthDeathWilsonBalding.t:dummy" spec="WilsonBalding" tree="@Tree.t:dummy" weight="3.0"/>
+
+    <operator id="StrictClockRateScaler.c:dummy" spec="ScaleOperator" parameter="@clockRate.c:dummy" weight="3.0"/>
+
+    <operator id="strictClockUpDownOperator.c:dummy" spec="UpDownOperator" scaleFactor="0.75" weight="3.0">
+        <up idref="clockRate.c:dummy"/>
+        <down idref="Tree.t:dummy"/>
+    </operator>
+
+    <logger id="tracelog" spec="Logger" fileName="dummy.log" logEvery="N_STORE_MCMC" model="@posterior" sanitiseHeaders="true" sort="smart">
+        <log idref="posterior"/>
+        <log idref="likelihood"/>
+        <log idref="prior"/>
+        <log idref="treeLikelihood.dummy"/>
+        <log id="TreeHeight.t:dummy" spec="beast.evolution.tree.TreeHeightLogger" tree="@Tree.t:dummy"/>
+        <log idref="BirthDeath.t:dummy"/>
+        <log idref="all.prior"/>
+        <log idref="clockRate.c:dummy"/>
+        ID_PRIOR
+    </logger>
+
+    <logger id="screenlog" spec="Logger" logEvery="1000">
+        <log idref="posterior"/>
+        <log idref="likelihood"/>
+        <log idref="prior"/>
+    </logger>
+
+    <logger id="treelog.t:dummy" spec="Logger" fileName="ultrametric.trees" logEvery="N_STORE_MCMC" mode="tree">
+        <log id="TreeWithMetaDataLogger.t:dummy" spec="beast.evolution.tree.TreeWithMetaDataLogger" tree="@Tree.t:dummy"/>
+    </logger>
+
+    <operatorschedule id="OperatorSchedule" spec="OperatorSchedule"/>
+
+</run>
+
+</beast>
