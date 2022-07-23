@@ -42,6 +42,8 @@ python3.9 keras_CNN_BRANCH.py --tr TRAIN.npy --te TEST.npy --trl train_trees.unr
 python3.9 keras_CNNVI_BRANCH.py --tr TRAIN.npy --te TEST.npy --trl train_trees.unrooted.Y.txt  --tel test_trees.unrooted.Y.txt 
 ```
 
-| Experiment | MLP | CNN | M-PHATE | Branch lengths | MSA model | N taxa | 
-| --- | :---: | :---: | :---: | --- | --- | --- |
-| Network generalization | ✅ | ✅ | ✅ | Exp(scale = 10) | JTR+G | 4 |
+# Summary table of performed experiments
+| Experiment | MLP | CNN | M-PHATE | ML | Branch lengths | MSA model | N taxa | 
+| --- | :---: | :---: | :---: | :---: | --- | --- | --- |
+| Network generalization | ✅ | ✅ | ✅ | ❌ | exp,10 | JC+G | 4 |
+| Branch length heterogeneity (BL-space) | ✅ | ✅ | ❌ | ✅ | ```exp,10```; ```bd,0.05,0.02,300,0.001``` | JC+G | 4 |
