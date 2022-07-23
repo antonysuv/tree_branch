@@ -1,5 +1,5 @@
 # Estimation of branch lengths using deep learning
-
+## Pipeline overview 
 ### 1) Generate newick trees with branch lengths  
 ```
 alisim_input_generate.r -d exp,10 -l 1000 -t '((A,B),(C,D));' -n 50000 -f trees
