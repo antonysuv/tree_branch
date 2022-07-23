@@ -45,5 +45,16 @@ python3.9 keras_CNNVI_BRANCH.py --tr TRAIN.npy --te TEST.npy --trl train_trees.u
 # Summary table of performed experiments
 | Experiment | MLP | CNN | M-PHATE | ML | Branch lengths | MSA model | N taxa | 
 | --- | :---: | :---: | :---: | :---: | --- | --- | --- |
-| Network generalization | ✅ | ✅ | ✅ | ❌ | exp,10 | JC+G | 4 |
-| Branch length heterogeneity (BL-space) | ✅ | ✅ | ❌ | ✅ | ```exp,10```; ```bd,0.05,0.02,300,0.001``` | JC+G | 4 |
+| Network generalization | ✅ | ✅ | ✅ | ❌ | ```exp,10``` | JC+G | 4 |
+| Branch length heterogeneity (BL-space) | ✅ | ✅ | ❌ | ✅ | ```beta mixture``` | JC+G | 4 |
+| Branch length heterogeneity (BL-space) | ✅ | ✅ | ❌ | ✅ | ```beta mixture``` | GTR+G | 4 |
+| Exponential branch lengths | ✅ | ✅ | ❌ | ✅ | ```exp,10``` | JC+G | 4 (unrooted) |
+| Exponential branch lengths | ✅ | ✅ | ❌ | ✅ | ```exp,10``` | GTR+G | 4 (unrooted) |
+| Exponential branch lengths | ✅ | ✅ | ❌ | ✅ | ```exp,10``` | UNREST+G | 4 (rooted) |
+| Birth-death branch lengths | ✅ | ✅ | ❌ | ✅ | ```bd,0.05,0.02,300,0.001``` | JC+G | 4 (unrooted) |
+| Birth-death branch lengths | ✅ | ✅ | ❌ | ✅ | ```bd,0.05,0.02,300,0.001``` | GTR+G | 4 (unrooted) |
+| Birth-death branch lengths | ✅ | ✅ | ❌ | ✅ | ```bd,0.05,0.02,300,0.001``` | UNREST+G | 4 (rooted) |
+| Tree shape (balanced) | ✅ | ✅ | ❌ | ✅ | ```exp,10``` | GTR+G | 8 |
+| Tree shape (pectinate) | ✅ | ✅ | ❌ | ✅ | ```exp,10``` | GTR+G | 8 |
+| Model misspecification (train on GTR test on JC) | ✅ | ✅ | ❌ | ✅ | ```exp,10``` | JC+G | 4 (unrooted) |
+| Model misspecification (train on JC test on GTR) | ✅ | ✅ | ❌ | ✅ | ```exp,10``` | JC+G | 4 (unrooted) |
