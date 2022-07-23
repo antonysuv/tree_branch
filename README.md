@@ -24,3 +24,15 @@ Options:
 	-h, --help
 		Show this help message and exit
 ```
+### 2) Generate multiple sequence alignment (MSA) for each tree with branch lengths 
+```
+iqtree2 --alisim alignment_$tr -m JC+G4{uniform} -t $file -af fasta
+```
+### 3) Perform training
+#### 3a) Multi-Layer Perceptron (MLP) using site pattern distributios extracted from MSAs
+```
+```
+#### 3b) Convolutional Neural Network using MSAs
+```
+```
+#### 3c) Convolutional Neural Network using MSAs
