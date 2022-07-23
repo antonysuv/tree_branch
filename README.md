@@ -31,8 +31,13 @@ iqtree2 --alisim alignment_$tr -m JC+G4{uniform} -t $file -af fasta
 ### 3) Perform training
 #### 3a) Multi-Layer Perceptron (MLP) using site pattern distributios extracted from MSAs
 ```
+python3.9 keras_MLP_BRANCH.py --tr TRAIN.npy --te TEST.npy --trl train_trees.unrooted.Y.txt  --tel test_trees.unrooted.Y.txt 
 ```
 #### 3b) Convolutional Neural Network using MSAs
 ```
+python3.9 keras_CNN_BRANCH.py --tr TRAIN.npy --te TEST.npy --trl train_trees.unrooted.Y.txt  --tel test_trees.unrooted.Y.txt 
 ```
-#### 3c) Convolutional Neural Network using MSAs
+#### 3c) Bayesian Convolutional Neural Network using MSAs
+```
+python3.9 keras_CNNVI_BRANCH.py --tr TRAIN.npy --te TEST.npy --trl train_trees.unrooted.Y.txt  --tel test_trees.unrooted.Y.txt 
+```
