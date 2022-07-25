@@ -170,8 +170,8 @@ mix_beta=function(tr,n_sim)
   trees=trees[rep(1,n_sim),]
   trees[,pos]=boot[,1:5]
   tree_list=as.vector(apply(trees,1,paste,collapse=""))
-  gg=read.tree(text=ss)
-  return(tree_list)
+  trees_ape=read.tree(text=tree_list)
+  return(trees_ape)
 }  
 
 
