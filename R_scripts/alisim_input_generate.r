@@ -1,9 +1,18 @@
-list_of_packages = c("TreeSim", "NELSI","MCMCpack","optparse")
+list_of_packages = c("TreeSim", "NELSI","MCMCpack","optparse","devtools","dplyr")
 new_packages = list_of_packages[!(list_of_packages %in% installed.packages()[,"Package"])]
-if(length(new_packages)) install.packages(new_packages,repos = "http://cran.us.r-project.org")
+if (any("NELSI" == new_packages))
+{
+    install.packages(new_packages[new_packages!="NELSI"],repos = "http://cran.us.r-project.org")
+    library("devtools")
+    install_github("sebastianduchene/NELSI")
+}else if (length(new_packages)>0)
+{
+    install.packages(new_packages,repos = "http://cran.us.r-project.org")
+}    
 
-library('TreeSim')
-library('NELSI')
+library("dplyr")
+library("TreeSim")
+library("NELSI")
 library("MCMCpack")
 library("optparse")
 options(scipen = 100000000)
@@ -135,12 +144,18 @@ q()")
 #BL-space generator
 mix_beta=function(tr,n_sim)
 {
+  #Set up progress bar
+  cat("\nWARNING: This command may fail if grid cell is empty, re-run the command\n")
+  pb = txtProgressBar(min = 0,     
+                         max = 10, 
+                         style = 3,    
+                         width = 50,   
+                         char = "=")    
   nbranch=length(tr$edge[,1])
   tr$edge.lengths=rep(0,nbranch)
   tr_newick=unlist(strsplit(write.tree(tr),""))
   v_select=combn(1:5,2)
   boot=c()
-  cat("WARNING: This command may fail if grid cell is empty, re-run the command")
   space_t=matrix(sample(rbeta(10000000,c(0.1,0.5,1),c(0.1,0.5,1))),ncol=5)
   #AS assymetry score (= pairwise distance PD) NB neigbour sum (= sum of neighboring branches NS) + L tree length   
   AS=apply(space_t[,v_select[1,]]-space_t[,v_select[2,]],1,sum)
@@ -157,9 +172,9 @@ mix_beta=function(tr,n_sim)
   #Uniform sampling from tree space
   for (i in 1:10)
   {  
-    print(i)
     sampletree=data.frame(all_t %>% group_by(Fact) %>% sample_n(size = 1,replace=F))
     boot=rbind(boot,sampletree)
+    setTxtProgressBar(pb, i)  
   }
   boot=boot[sample(nrow(boot),n_sim),]
   pdf(file="uniform_sample_from_BL_space.pdf")
@@ -179,7 +194,7 @@ mix_beta=function(tr,n_sim)
 sim.brls=function(tree,nsim,distr)
 {
     
-    if (distr[1] != "bd")
+    if (!any(distr[1] == c("bd", "mixb")))
     {    
         cat("\nInitializing the trees")
         n_br = nrow(tree$edge)
@@ -243,6 +258,11 @@ sim.brls=function(tree,nsim,distr)
            tree_list[i]=clock_scaled_unlisted[i]
         }    
     }
+    if (distr[1] == "mixb")
+    {
+       #Example: mixb
+       tree_list=mix_beta(tree,nsim) 
+    }    
     
 
     return(tree_list)  
