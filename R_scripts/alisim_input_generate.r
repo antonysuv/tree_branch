@@ -22,6 +22,8 @@ opt = parse_args(opt_parser)
 #Rscript ~/Desktop/git_repos/tree_branch/R_scripts/alisim_input_generate.r -d exp,5 -l 1000 -t '((A,B),C);' -n 50000 -f test_trees
 ############
 
+my_seed=runif(1,0,4294967295)
+set.seed(my_seed)
 
 #Disable scientific notation in ape 
 .write.tree2 <- function(phy, digits = 10, tree.prefix = "", check_tips)
@@ -130,7 +132,47 @@ q()")
     write(my_template,"input_revbayes.Rev")    
 }
 
-
+#BL-space generator
+mix_beta=function(tr,n_sim)
+{
+  nbranch=length(tr$edge[,1])
+  tr$edge.lengths=rep(0,nbranch)
+  tr_newick=unlist(strsplit(write.tree(tr),""))
+  v_select=combn(1:5,2)
+  boot=c()
+  cat("WARNING: This command may fail if grid cell is empty, re-run the command")
+  space_t=matrix(sample(rbeta(10000000,c(0.1,0.5,1),c(0.1,0.5,1))),ncol=5)
+  #AS assymetry score (= pairwise distance PD) NB neigbour sum (= sum of neighboring branches NS) + L tree length   
+  AS=apply(space_t[,v_select[1,]]-space_t[,v_select[2,]],1,sum)
+  LB=2*apply(space_t,1,sum)+apply(space_t[,2:4],1,sum)
+  pdf(file="raw_BL_space.pdf")
+  plot(AS[1:200000],LB[1:200000],col=adjustcolor("black", alpha.f = 0.05),pch=16,xlab="PD",ylab = "LNS")
+  dev.off()
+  x=seq(-6,6,0.1)
+  y=seq(0,13,0.1)
+  m=matrix(1:(length(x)*length(y)),nrow=length(x),ncol=length(y))
+  xint=findInterval(AS,x)
+  yint=findInterval(LB,y)
+  all_t=data.frame(space_t,AS=AS,LB=LB,XI=xint,YI=yint,Fact=m[cbind(xint,yint)])
+  #Uniform sampling from tree space
+  for (i in 1:10)
+  {  
+    print(i)
+    sampletree=data.frame(all_t %>% group_by(Fact) %>% sample_n(size = 1,replace=F))
+    boot=rbind(boot,sampletree)
+  }
+  boot=boot[sample(nrow(boot),n_sim),]
+  pdf(file="uniform_sample_from_BL_space.pdf")
+  plot(boot$AS,boot$LB,col=adjustcolor("black", alpha.f = 0.05),pch=16,xlab="PD",ylab = "LNS")
+  dev.off()
+  pos=which(tr_newick==0)
+  trees=data.frame(t(tr_newick))
+  trees=trees[rep(1,n_sim),]
+  trees[,pos]=boot[,1:5]
+  tree_list=as.vector(apply(trees,1,paste,collapse=""))
+  gg=read.tree(text=ss)
+  return(tree_list)
+}  
 
 
 #Simulate branch lengths function
@@ -266,7 +308,7 @@ dir.create(main_dir)
 setwd(main_dir)
 #Write tree in newick
 write.tree(tree_string,"input_tree.tre")
-
+write(my_seed,"seed.txt")
 cat("\nGenerating TEST dataset")
 dir.create("TEST")
 setwd("TEST")
@@ -291,46 +333,3 @@ setwd("../..")
 
 
 
-
-
-
-
-mix_beta=function(tr,n_sim)
-{
-  nbranch=length(tr$edge[,1])
-  tr$edge.lengths=rep(0,nbranch)
-  tr_newick=unlist(strsplit(write.tree(tr),""))
-  v_select=combn(1:5,2)
-  boot=c()
-  
-  space_t=matrix(sample(rbeta(10000000,c(0.1,0.5,1),c(0.1,0.5,1))),ncol=5)
-  #AS assymetry score (= pairwise distance PD) NB neigbour sum (= sum of neighboring branches NS) + L tree length   
-  AS=apply(space_t[,v_select[1,]]-space_t[,v_select[2,]],1,sum)
-  LB=2*apply(space_t,1,sum)+apply(space_t[,2:4],1,sum)
-  pdf(file="raw_BL_space.pdf")
-  #plot(boot$AS[1:100000],boot$LB[1:100000],col=adjustcolor("black", alpha.f = 0.05),pch=16,xlab="PD",ylab = "LNS")
-  dev.off()
-  x=seq(-6,6,0.1)
-  y=seq(0,13,0.1)
-  m=matrix(1:(length(x)*length(y)),nrow=length(x),ncol=length(y))
-  xint=findInterval(AS,x)
-  yint=findInterval(LB,y)
-  all_t=data.frame(space_t,AS=AS,LB=LB,XI=xint,YI=yint,Fact=m[cbind(xint,yint)])
-  #Uniform sampling from tree space
-  for (i in 1:10)
-  {  
-    print(i)
-    sampletree=data.frame(all_t %>% group_by(Fact) %>% sample_n(size = 1,replace=F))
-    boot=rbind(boot,sampletree)
-  }
-  boot=boot[sample(nrow(boot),n_sim),]
-  pdf(file="uniform_sample_from_BL_space.pdf")
-  plot(boot$AS,boot$LB,col=adjustcolor("black", alpha.f = 0.05),pch=16,xlab="PD",ylab = "LNS")
-  dev.off()
-  pos=which(tr_newick==0)
-  trees=data.frame(t(tr_newick))
-  trees=trees[rep(1,n_sim),]
-  trees[,pos]=boot[,1:5]
-  tree_list=as.vector(apply(trees,1,paste,collapse=""))
-  return(tree_list)
-}  
