@@ -22,7 +22,8 @@ option_list = list(
   make_option(c("-n", "--nsim"), type="numeric", default=10, help="Number of simulations", metavar="numeric"),  
   make_option(c("-d", "--distribution"), type="character", default="unif,0,10", help="Branch length distribution", metavar="character"),
   make_option(c("-l", "--len"), type="numeric", default=100, help="Alignment length", metavar="numeric"),
-  make_option(c("-f", "--fname"), type="character", default="simulation", help="File name", metavar="character")  
+  make_option(c("-f", "--fname"), type="character", default="simulation", help="File name", metavar="character"),
+  make_option(c("-p", "--prop"), type="numeric", default=0.1, help="Proportion of TEST data to generate", metavar="numeric")  
 )
 opt_parser = OptionParser(option_list=option_list)
 opt = parse_args(opt_parser)
@@ -143,51 +144,62 @@ q()")
 
 #BL-space generator
 mix_beta=function(nsim)
-{
-  #Set up progress bar
-  cat("\nWARNING: This distribution can only be used for unrooted quartet trees.\nThis command may fail if grid cell is empty, re-run the command\n")
-  pb = txtProgressBar(min = 0,     
-                         max = 10, 
-                         style = 3,    
-                         width = 50,   
-                         char = "=")    
-  tree = read.tree(text= "(A,B,(C,D));")
-  tree_list=rep(tree,nsim)
-  v_select=combn(1:5,2)
-  boot=c()
-  space_t=matrix(sample(rbeta(10000000,c(0.1,0.5,1),c(0.1,0.5,1))),ncol=5)
-  #AS assymetry score (= pairwise distance PD) NB neigbour sum (= sum of neighboring branches NS) + L tree length   
-  AS=apply(space_t[,v_select[1,]]-space_t[,v_select[2,]],1,sum)
-  LB=2*apply(space_t,1,sum)+apply(space_t[,2:4],1,sum)
-  pdf(file="raw_BL_space.pdf")
-  plot(AS[1:200000],LB[1:200000],col=adjustcolor("black", alpha.f = 0.05),pch=16,xlab="PD",ylab = "LNS")
-  dev.off()
-  x=seq(-6,6,0.1)
-  y=seq(0,13,0.1)
-  m=matrix(1:(length(x)*length(y)),nrow=length(x),ncol=length(y))
-  xint=findInterval(AS,x)
-  yint=findInterval(LB,y)
-  all_t=data.frame(space_t,AS=AS,LB=LB,XI=xint,YI=yint,Fact=m[cbind(xint,yint)])
-  #Uniform sampling from tree space
-  for (i in 1:10)
-  {  
-    sampletree=data.frame(all_t %>% group_by(Fact) %>% sample_n(size = 1,replace=F))
-    boot=rbind(boot,sampletree)
-    #setTxtProgressBar(pb, i)  
-  }
-  boot=boot[sample(nrow(boot),nsim),]
-  pdf(file="uniform_sample_from_BL_space.pdf")
-  plot(boot$AS,boot$LB,col=adjustcolor("black", alpha.f = 0.05),pch=16,xlab="PD",ylab = "LNS")
-  dev.off()
-  write.table(data.frame(PD=boot$AS,LNS=boot$LB),"bl_coordinates.txt",row.names=F,quote=F)
-  for ( i in 1:length(tree_list))
-  {
-    tree_list[[i]]$edge.length = as.numeric(boot[i,c("X1","X2","X3","X4","X5")])
-    setTxtProgressBar(pb, i)
-  } 
-  close(pb)
-  return(tree_list)
-}  
+    {
+      #Set up progress bar
+      cat("\nWARNING: This distribution can only be used for unrooted quartet trees.\nThis command may fail if grid cell is empty, re-run the command\n")    
+      tree = read.tree(text= "(A,B,(C,D));")
+      tree_list=rep(tree,nsim)
+      v_select=combn(1:5,2)
+      boot=c()
+      space_t=matrix(sample(rbeta(10000000,c(0.1,0.5,1),c(0.1,0.5,1))),ncol=5)
+      #AS assymetry score (= pairwise distance PD) NB neigbour sum (= sum of neighboring branches NS) + L tree length   
+      AS=apply(space_t[,v_select[1,]]-space_t[,v_select[2,]],1,sum)
+      LB=2*apply(space_t,1,sum)+apply(space_t[,2:4],1,sum)
+      pdf(file="raw_BL_space.pdf")
+      plot(AS[1:200000],LB[1:200000],col=adjustcolor("black", alpha.f = 0.05),pch=16,xlab="PD",ylab = "LNS")
+      dev.off()
+      x=seq(-6,6,0.1)
+      y=seq(0,13,0.1)
+      m=matrix(1:(length(x)*length(y)),nrow=length(x),ncol=length(y))
+      xint=findInterval(AS,x)
+      yint=findInterval(LB,y)
+      all_t=data.frame(space_t,AS=AS,LB=LB,XI=xint,YI=yint,Fact=m[cbind(xint,yint)])
+      #Uniform sampling from tree space
+      cat("\nStarting uniform sampling from BL-space\n")
+      pb1 = txtProgressBar(min = 0,     
+                             max = 10, 
+                             style = 3,    
+                             width = 50,   
+                             char = "=")
+    
+      
+      for (i in 1:10)
+      {  
+        sampletree=data.frame(all_t %>% group_by(Fact) %>% sample_n(size = 1,replace=F))
+        boot=rbind(boot,sampletree)
+        setTxtProgressBar(pb1, i)  
+      }
+      close(pb1)
+      boot=boot[sample(nrow(boot),nsim),]
+      pdf(file="uniform_sample_from_BL_space.pdf")
+      plot(boot$AS,boot$LB,col=adjustcolor("black", alpha.f = 0.05),pch=16,xlab="PD",ylab = "LNS")
+      dev.off()
+      write.table(data.frame(PD=boot$AS,LNS=boot$LB),"bl_coordinates.txt",row.names=F,quote=F)
+      #Assign branch lengths to trees
+      cat("\nInitializing the trees\n")
+      pb2 = txtProgressBar(min = 0,     
+                             max = nsim, 
+                             style = 3,    
+                             width = 50,   
+                             char = "=")
+      for ( i in 1:length(tree_list))
+      {
+        tree_list[[i]]$edge.length = as.numeric(boot[i,c("X1","X2","X5","X3","X4")])
+        setTxtProgressBar(pb2, i)
+      } 
+      close(pb2)
+      return(tree_list)
+    }  
 
 
 #Simulate branch lengths function
@@ -335,7 +347,7 @@ setwd("TEST")
 
 main_gen(nwk_tree = tree_string,
          distr = strsplit(opt$distribution,",")[[1]],
-         nsim = round(opt$nsim/10),
+         nsim = round(opt$nsim*opt$prop),
          aln_len = opt$len,
          file = paste("test_",opt$fname,sep=""))
 setwd("..")
