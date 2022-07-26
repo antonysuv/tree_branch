@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import tensorflow as tf
 import time
 import pandas
@@ -19,7 +20,7 @@ import m_phate
 import m_phate.train
 import scprep
 
-
+#Set seed
 seed = np.random.randint(0,2**32 - 1,1)
 np.random.seed(seed)
 tf.random.set_seed(seed)
