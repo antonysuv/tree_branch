@@ -31,7 +31,7 @@ opt = parse_args(opt_parser)
 #Rscript ~/Desktop/git_repos/tree_branch/R_scripts/alisim_input_generate.r -d exp,5 -l 1000 -t '((A,B),C);' -n 50000 -f test_trees
 ############
 
-my_seed=runif(1,0,4294967295)
+my_seed=runif(1,0,429496729)
 set.seed(my_seed)
 
 #Disable scientific notation in ape 
@@ -142,18 +142,17 @@ q()")
 }
 
 #BL-space generator
-mix_beta=function(tr,n_sim)
+mix_beta=function(nsim)
 {
   #Set up progress bar
-  cat("\nWARNING: This command may fail if grid cell is empty, re-run the command\n")
+  cat("\nWARNING: This distribution can only be used for unrooted quartet trees.\nThis command may fail if grid cell is empty, re-run the command\n")
   pb = txtProgressBar(min = 0,     
                          max = 10, 
                          style = 3,    
                          width = 50,   
                          char = "=")    
-  nbranch=length(tr$edge[,1])
-  tr$edge.lengths=rep(0,nbranch)
-  tr_newick=unlist(strsplit(write.tree(tr),""))
+  tree = read.tree(text= "(A,B,(C,D));")
+  tree_list=rep(tree,nsim)
   v_select=combn(1:5,2)
   boot=c()
   space_t=matrix(sample(rbeta(10000000,c(0.1,0.5,1),c(0.1,0.5,1))),ncol=5)
@@ -174,19 +173,20 @@ mix_beta=function(tr,n_sim)
   {  
     sampletree=data.frame(all_t %>% group_by(Fact) %>% sample_n(size = 1,replace=F))
     boot=rbind(boot,sampletree)
-    setTxtProgressBar(pb, i)  
+    #setTxtProgressBar(pb, i)  
   }
-  boot=boot[sample(nrow(boot),n_sim),]
+  boot=boot[sample(nrow(boot),nsim),]
   pdf(file="uniform_sample_from_BL_space.pdf")
   plot(boot$AS,boot$LB,col=adjustcolor("black", alpha.f = 0.05),pch=16,xlab="PD",ylab = "LNS")
   dev.off()
-  pos=which(tr_newick==0)
-  trees=data.frame(t(tr_newick))
-  trees=trees[rep(1,n_sim),]
-  trees[,pos]=boot[,1:5]
-  tree_list=as.vector(apply(trees,1,paste,collapse=""))
-  trees_ape=read.tree(text=tree_list)
-  return(trees_ape)
+  write.table(data.frame(PD=boot$AS,LNS=boot$LB),"bl_coordinates.txt",row.names=F,quote=F)
+  for ( i in 1:length(tree_list))
+  {
+    tree_list[[i]]$edge.length = as.numeric(boot[i,c("X1","X2","X3","X4","X5")])
+    setTxtProgressBar(pb, i)
+  } 
+  close(pb)
+  return(tree_list)
 }  
 
 
@@ -261,7 +261,7 @@ sim.brls=function(tree,nsim,distr)
     if (distr[1] == "mixb")
     {
        #Example: mixb
-       tree_list=mix_beta(tree,nsim) 
+       tree_list=mix_beta(nsim) 
     }    
     
 
