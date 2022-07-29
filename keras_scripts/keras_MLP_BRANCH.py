@@ -33,9 +33,10 @@ def aggregate_Yinput(Y_files_in):
     Y_aggr = []
     for Y_file in Y_files_in:
         #Log transforming branch lengths to avoid negative values
-        Y_part = np.log(pandas.read_csv(Y_file, delim_whitespace=True, header=None))
+        Y_part = np.log(np.genfromtxt(Y_file))
         Y_aggr.append(Y_part)
-    Y_aggr = pandas.concat(Y_aggr)
+    Y_aggr = np.array(Y_aggr)
+    Y_aggr = np.concatenate(Y_aggr)
     return(Y_aggr)
 
 

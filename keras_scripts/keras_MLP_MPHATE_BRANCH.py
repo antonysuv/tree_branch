@@ -39,9 +39,10 @@ def aggregate_Yinput(Y_files_in):
     Y_aggr = []
     for Y_file in Y_files_in:
         #Log transforming branch lengths to avoid negative values
-        Y_part = np.log(pandas.read_csv(Y_file, delim_whitespace=True, header=None))
+        Y_part = np.log(np.genfromtxt(Y_file))
         Y_aggr.append(Y_part)
-    Y_aggr = pandas.concat(Y_aggr)
+    Y_aggr = np.array(Y_aggr)
+    Y_aggr = np.concatenate(Y_aggr)
     return(Y_aggr)
 
 
@@ -131,7 +132,7 @@ def main():
     #Regression BL
     #Run model
     model_mlp_reg, my_trace, my_history = build_MLP_brl(X_train=X_train,Y_train=Y_train,droput_rates=args.DROP,batch_sizes=100, X_test=X_test)
-    np.savetxt("randomseed.mlp.mphate.dropout_{}.txt".format(args.DROP),np.random.get_state()[1][0],fmt='%f')
+    #np.savetxt("randomseed.mlp.mphate.dropout_{}.txt".format(args.DROP),np.random.get_state()[1][0],fmt='%f')
     print("Running M-PHATE")
     #Extract trace data
     trace_data = np.array(my_trace.trace)
