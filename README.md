@@ -2,7 +2,7 @@
 ## Pipeline overview 
 ### 1) Generate newick trees with branch lengths  
 ```
-alisim_input_generate.r -d exp,10 -l 1000 -t '((A,B),(C,D));' -n 50000 -f trees
+alisim_input_generate.r -d exp,10 -l 1000 -t '((A,B),(C,D));' -n 50000 
 ```
 ```
 Options:
@@ -20,8 +20,11 @@ Options:
 
 	-f CHARACTER, --fname=CHARACTER
 		File name
-
-	-h, --help
+	
+    -p NUMERIC, --prop=NUMERIC
+		Proportion of TRAIN data to generate TEST data
+	
+    -h, --help
 		Show this help message and exit
 ```
 ### 2) Generate multiple sequence alignment (MSA) for each tree with branch lengths 
@@ -58,3 +61,43 @@ python3.9 keras_CNNVI_BRANCH.py --tr TRAIN.npy --te TEST.npy --trl train_trees.u
 | Tree shape (pectinate) | ✅ | ✅ | ❌ | ✅ | ```exp,10``` | GTR+G | 8 |
 | Model misspecification (train on GTR test on JC) | ✅ | ✅ | ❌ | ✅ | ```exp,10``` | JC+G | 4 (unrooted) |
 | Model misspecification (train on JC test on GTR) | ✅ | ✅ | ❌ | ✅ | ```exp,10``` | JC+G | 4 (unrooted) |
+
+
+
+# AliSim input simulation commands
+### Network generalization in MPHATE  
+```
+alisim_input_generate.r -d exp,10 -l 1000 -t '(A,B,(C,D));' -n 50000
+```
+
+### BL space
+#### 1000 sites
+```
+alisim_input_generate.r -d mixb -l 1000 -t '(A,B,(C,D));' -n 50000 -p 1
+```
+
+#### 5000 sites
+```
+alisim_input_generate.r -d mixb -l 5000 -t '(A,B,(C,D));' -n 50000 -p 1
+```
+
+
+
+### Exponential distribution 
+
+
+#### average branch length = 0.01
+```
+alisim_input_generate.r -d exp,100 -l 1000 -t '(A,B,(C,D));' -n 50000
+```
+
+#### average branch length = 0.1
+```
+alisim_input_generate.r -d exp,10 -l 1000 -t '(A,B,(C,D));' -n 50000
+```
+
+#### average branch length = 1
+```
+alisim_input_generate.r -d exp,1 -l 1000 -t '(A,B,(C,D));' -n 50000
+```
+

@@ -23,7 +23,7 @@ option_list = list(
   make_option(c("-d", "--distribution"), type="character", default="unif,0,10", help="Branch length distribution", metavar="character"),
   make_option(c("-l", "--len"), type="numeric", default=100, help="Alignment length", metavar="numeric"),
   make_option(c("-f", "--fname"), type="character", default="simulation", help="File name", metavar="character"),
-  make_option(c("-p", "--prop"), type="numeric", default=0.1, help="Proportion of TEST data to generate", metavar="numeric")  
+  make_option(c("-p", "--prop"), type="numeric", default=0.1, help="Proportion of TRAIN data to generate TEST data", metavar="numeric")  
 )
 opt_parser = OptionParser(option_list=option_list)
 opt = parse_args(opt_parser)
