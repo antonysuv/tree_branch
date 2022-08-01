@@ -1,5 +1,5 @@
 # Estimation of branch lengths using deep learning
-Multilayer perceptron | Convolutional neural net
+Multilayer perceptron | Convolutional neural network
 :-------------------------:|:-------------------------:
 ![3D rotating gif](https://github.com/antonysuv/tree_branch/blob/main/img/mlp_intraslice_knn_5_dropout_0.0_epoch.gif) | ![3D rotating gif](https://github.com/antonysuv/tree_branch/blob/main/img/cnn_intraslice_knn_2_dropout_0.0_epoch.gif)
 ![3D rotating gif](https://github.com/antonysuv/tree_branch/blob/main/img/mlp_intraslice_knn_5_dropout_0.0_valloss.gif) | ![3D rotating gif](https://github.com/antonysuv/tree_branch/blob/main/img/cnn_intraslice_knn_2_dropout_0.0_valloss.gif)
