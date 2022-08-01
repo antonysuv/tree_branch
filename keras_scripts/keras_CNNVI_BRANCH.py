@@ -165,7 +165,7 @@ def main():
     
     #Saving model
     print("\nSaving keras trained model")
-    model_cnn_reg.save("keras_model_cnnvi.h5")
+    model_cnnvi_reg.save("keras_model_cnnvi.h5")
     tf.keras.utils.plot_model(model_cnnvi_reg, to_file='model_cnnvi.png', show_shapes=True)
 
     
