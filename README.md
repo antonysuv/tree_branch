@@ -1,4 +1,5 @@
 # Estimation of branch lengths using deep learning
+![3D rotating gif](https://github.com/antonysuv/tree_branch/blob/main/img/mlp_intraslice_knn_5_dropout_0.0_epoch.gif)
 ## Pipeline overview 
 ### 1) Generate newick trees with branch lengths  
 ```
