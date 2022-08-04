@@ -146,7 +146,7 @@ q()")
 mix_beta=function(nsim)
     {
       #Set up progress bar
-      cat("\nWARNING: This distribution can only be used for unrooted quartet trees.\nThis command may fail if grid cell is empty, re-run the command\n")    
+      cat("\nWARNING: This distribution can only be used for unrooted quartet trees.\nThis command may fail if grid cell is empty, in this case re-run the command\n")    
       tree = read.tree(text= "(A,B,(C,D));")
       tree_list=rep(tree,nsim)
       v_select=combn(1:5,2)
