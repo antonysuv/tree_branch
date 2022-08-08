@@ -73,7 +73,7 @@ def build_CNN_brl(X_train,Y_train,conv_pool_n,filter_n,droput_rates,batch_sizes,
     for l in list(range(0,conv_pool_n)):
         x = ZeroPadding2D(padding=((0, 0), (0,conv_y[l]-1)))(x)        
         x = Conv2D(filters=filter_s[l], kernel_size=(conv_x[l], conv_y[l]), strides=1,activation='relu')(x)
-        #x = BatchNormalization()(x)
+        x = BatchNormalization()(x)
         x = Dropout(rate=droput_rates)(x)
         x = AveragePooling2D(pool_size=(1,pool[l]))(x)
         x = Dropout(rate=droput_rates)(x)

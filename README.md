@@ -111,4 +111,8 @@ set.seed(45)
 phy=rtree(25, rooted = F, tip.label = LETTERS[1:25], br = NULL, equiprob = FALSE)
 (G,P,(D,((W,C),(((X,I),((O,(B,E)),(N,K))),(((((J,M),((R,Q),T)),(A,S)),(L,(V,(U,F)))),(H,Y))))));
 alisim_input_generate.r -d exp,10 -l 1000 -t '(G,P,(D,((W,C),(((X,I),((O,(B,E)),(N,K))),(((((J,M),((R,Q),T)),(A,S)),(L,(V,(U,F)))),(H,Y))))));' -n 50000
+alisim_input_generate.r -d exp,10 -l 1000 -t '(G,P,(D,((W,C),(((X,I),((O,(B,E)),(N,K))),(((((J,M),((R,Q),T)),(A,S)),(L,(V,(U,F)))),(H,Y))))));' -n 150000 -p 0.0333333333 
+
+
+
 ```

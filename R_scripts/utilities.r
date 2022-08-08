@@ -65,20 +65,22 @@ get_cor = function(t1,t2)
 
     pl = data_prep(t1,t2)
     pl$er = (pl$estimated_brl-pl$true_brl)^2
+    pl$aer = abs(pl$estimated_brl-pl$true_brl)
     mses = paste("MSE =",round(tapply(pl$er,pl$br_id,mean),6))
-    mses_labels = paste("Branch",1:length(mses),":",mses)
+    maes = paste("\nMAE =",round(tapply(pl$aer,pl$br_id,mean),6))
+    mses_labels = paste("Branch",1:length(mses),":",mses,maes)
     pl_g = ggscatter(pl, x = "estimated_brl", y = "true_brl",
           add = "reg.line",                                 # Add regression line
           conf.int = TRUE,                                  # Add confidence interval
           size = 0.5,
-          #xlim=c(0,2),
-          #ylim=c(0,2),
+          #xlim=c(0,10),
+          #ylim=c(0,10),
           add.params = list(color = "blue",
                             fill = "lightgray")
                             )+
     #+stat_cor(method = "pearson")
-    +geom_abline(slope = 1,color = "red")
-    +xlab("Estimated branch lengths")+ylab("True branch lengths")
+    geom_abline(slope = 1,color = "red")+
+    xlab("Estimated branch lengths")+ylab("True branch lengths")
   
   pl_g = facet(pl_g,facet.by = "br_id",scales = "free",panel.labs = list(br_id=mses_labels),ncol = 4)  
   return(pl_g)

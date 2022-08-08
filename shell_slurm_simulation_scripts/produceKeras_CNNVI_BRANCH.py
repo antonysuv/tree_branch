@@ -12,7 +12,7 @@ echo '#SBATCH --cpus-per-task=1' >> $batch
 echo '#SBATCH --mem=60G' >> $batch
 echo '#SBATCH --time=100:00:00' >> $batch
 echo '#SBATCH --partition=volta-gpu' >> $batch
-echo '#SBATCH --output=run-%j.log' >> $batch
+echo '#SBATCH --output=cnnvi-%j.log' >> $batch
 echo '#SBATCH --gres=gpu:1' >> $batch
 echo '#SBATCH --qos=gpu_access' >> $batch
 

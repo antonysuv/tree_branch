@@ -15,7 +15,7 @@ from tensorflow.keras.layers import MaxPooling2D, AveragePooling2D
 from tensorflow.keras.layers import concatenate
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from tensorflow.keras.optimizers import Adam
-
+from tensorflow.keras.regularizers import L1, L2, L1L2
 #Set seed
 seed = np.random.randint(0,2**32 - 1,1)
 np.random.seed(seed)
@@ -69,8 +69,8 @@ def build_CNN_brl(X_train,Y_train,conv_pool_n,filter_n,droput_rates,batch_sizes)
     for l in list(range(0,conv_pool_n)):
         x = ZeroPadding2D(padding=((0, 0), (0,conv_y[l]-1)))(x)        
         x = Conv2D(filters=filter_s[l], kernel_size=(conv_x[l], conv_y[l]), strides=1,activation='relu')(x)
-        #x = BatchNormalization()(x)
         x = Dropout(rate=droput_rates)(x)
+        x = BatchNormalization()(x)
         x = AveragePooling2D(pool_size=(1,pool[l]))(x)
         x = Dropout(rate=droput_rates)(x)
     output_msa = Flatten()(x)
@@ -88,10 +88,10 @@ def build_CNN_brl(X_train,Y_train,conv_pool_n,filter_n,droput_rates,batch_sizes)
     print(model_cnn.summary())
    
     #Model stopping criteria
-    callback1=EarlyStopping(monitor='val_loss', min_delta=0.001, patience=10, verbose=1, mode='auto')
+    callback1=EarlyStopping(monitor='val_loss', min_delta=0.001, patience=20, verbose=1, mode='auto')
     callback2=ModelCheckpoint('best_weights_cnn', monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=False, mode='auto', save_freq='epoch')    
 
-    model_cnn.fit(x=X_train,y=Y_train,batch_size=batch_sizes,callbacks=[callback1,callback2],epochs=100,verbose=1,shuffle=True,validation_split=0.1)
+    model_cnn.fit(x=X_train,y=Y_train,batch_size=batch_sizes,callbacks=[callback1,callback2],epochs=400,verbose=1,shuffle=True,validation_split=0.1)
     return(model_cnn)
  
 
