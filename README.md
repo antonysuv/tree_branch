@@ -112,7 +112,20 @@ phy=rtree(25, rooted = F, tip.label = LETTERS[1:25], br = NULL, equiprob = FALSE
 (G,P,(D,((W,C),(((X,I),((O,(B,E)),(N,K))),(((((J,M),((R,Q),T)),(A,S)),(L,(V,(U,F)))),(H,Y))))));
 alisim_input_generate.r -d exp,10 -l 1000 -t '(G,P,(D,((W,C),(((X,I),((O,(B,E)),(N,K))),(((((J,M),((R,Q),T)),(A,S)),(L,(V,(U,F)))),(H,Y))))));' -n 50000
 alisim_input_generate.r -d exp,10 -l 1000 -t '(G,P,(D,((W,C),(((X,I),((O,(B,E)),(N,K))),(((((J,M),((R,Q),T)),(A,S)),(L,(V,(U,F)))),(H,Y))))));' -n 150000 -p 0.0333333333 
+```
 
+#### 25 taxa
+```
+set.seed(45)
+phy=rtree(25, rooted = F, tip.label = LETTERS[1:25], br = NULL, equiprob = FALSE)
+(G,P,(D,((W,C),(((X,I),((O,(B,E)),(N,K))),(((((J,M),((R,Q),T)),(A,S)),(L,(V,(U,F)))),(H,Y))))));
+alisim_input_generate.r -d exp,10 -l 1000 -t '(G,P,(D,((W,C),(((X,I),((O,(B,E)),(N,K))),(((((J,M),((R,Q),T)),(A,S)),(L,(V,(U,F)))),(H,Y))))));' -n 50000
+```
 
-
+#### 50 taxa
+```
+set.seed(132)
+phy=rtree(50, rooted = F, br = rexp, equiprob = FALSE)
+(t6,t45,((t25,t23),(((t15,t10),((t39,t50),t9)),(((t37,(t46,t2)),((((t30,(t28,(t26,(t49,t5)))),t8),((((t42,t44),t20),t36),((((t38,t18),t22),t41),t32))),((t4,(t21,t48)),(t17,t33)))),((t24,t47),((((t3,t35),((t1,(t29,t31)),(((t27,t11),(t7,t13)),t43))),((t19,(t40,t16)),t14)),(t12,t34)))))));
+alisim_input_generate.r -d exp,10 -l 1000 -t '(t6,t45,((t25,t23),(((t15,t10),((t39,t50),t9)),(((t37,(t46,t2)),((((t30,(t28,(t26,(t49,t5)))),t8),((((t42,t44),t20),t36),((((t38,t18),t22),t41),t32))),((t4,(t21,t48)),(t17,t33)))),((t24,t47),((((t3,t35),((t1,(t29,t31)),(((t27,t11),(t7,t13)),t43))),((t19,(t40,t16)),t14)),(t12,t34)))))));' -n 50000
 ```
