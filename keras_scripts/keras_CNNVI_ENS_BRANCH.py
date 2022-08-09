@@ -121,10 +121,41 @@ def build_CNNVI_brl(X_train,Y_train,conv_pool_n,filter_n,droput_rates,batch_size
     callback1=EarlyStopping(monitor='val_loss', min_delta=0.001, patience=10, verbose=1, mode='auto')
     callback2=ModelCheckpoint('best_weights_cnnvi', monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=False, mode='auto', save_freq='epoch')    
 
-    model_cnn.fit(x=X_train,y=Y_train,batch_size=batch_sizes,callbacks=[callback1,callback2],epochs=100,verbose=1,shuffle=True,validation_split=0.1)
+    model_cnn.fit(x=X_train,y=Y_train,batch_size=batch_sizes,callbacks=[callback1,callback2],epochs=200,verbose=1,shuffle=True,validation_split=0.1)
     return(model_cnn)
  
+def build_MLP_brl(X_train,Y_train,droput_rates,batch_sizes):
+    
+    # Length of feature vector, i.e. number of patterns 
+    N_patterns=X_train.shape[1]
+    
+    #Number of branches of a tree
+    N_branch = Y_train.shape[1]
+    
+    visible_layer = Input(shape=(N_patterns,))
+    hidden1 = Dense(10000,activation='relu')(visible_layer)
+    drop1 = Dropout(rate=droput_rates)(hidden1)
+    hidden2 = Dense(10000,activation='relu')(drop1)
+    drop2 = Dropout(rate=droput_rates)(hidden2)
+    hidden3 = Dense(10000,activation='relu')(drop2)
+    drop3 = Dropout(rate=droput_rates)(hidden3)
+    output = Dense(N_branch, activation='linear')(drop3)
+    
 
+    model_mlp = Model(inputs=visible_layer, outputs=output)
+    model_mlp.compile(loss='mean_squared_error',optimizer='adam',metrics=['mae','mse'])
+    
+    #Print model
+    print(model_mlp.summary())
+   
+    #Model stopping criteria
+    callback1=EarlyStopping(monitor='val_loss', min_delta=0.001, patience=10, verbose=1, mode='auto')
+    callback2=ModelCheckpoint('best_weights_mlp', monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=False, mode='auto', save_freq='epoch')    
+
+    model_mlp.fit(x=X_train,y=Y_train,batch_size=batch_sizes,callbacks=[callback1,callback2],epochs=100,verbose=1,shuffle=True,validation_split=0.1)
+    return(model_mlp)
+    
+    
 def main():
     parser = argparse.ArgumentParser(description='Keras run')
     parser.add_argument( '--tr', help = "Training MSAs dataset in npy",nargs='+',dest='TRAIN')
@@ -152,21 +183,30 @@ def main():
 
     #Regression BL
     #Run model
-    model_cnnvi_reg=build_CNNVI_brl(X_train=X_train,Y_train=Y_train,conv_pool_n=6,filter_n=100,droput_rates=0.15,batch_sizes=100)
+    model_cnnvi_reg=build_CNNVI_brl(X_train=X_train,Y_train=Y_train,conv_pool_n=6,filter_n=100,droput_rates=0.25,batch_sizes=100)
     
     #Evaluate model
     brls_posterior, brls_evals  = mc_dropout(X_test = X_test, Y_test = Y_test, model = model_cnnvi_reg)
-    np.savetxt("brls.evaluated.cnnvi.txt",np.array(brls_evals),fmt='%f')
-    np.savetxt("brls.posterior.cnnvi.txt",brls_posterior,fmt='%f')
+    np.savetxt("brls.evaluated.cnnviens_step1.txt",np.array(brls_evals),fmt='%f')
+    np.savetxt("brls.posterior.cnnviens_step1.txt",brls_posterior,fmt='%f')
     
     #Summarize model posterior
     brls_summary = posterior_summary(brls_posterior = brls_posterior, Y_test = Y_test)
-    np.savetxt("brls.estimated.cnnvi.txt",brls_summary,fmt='%f')
+    np.savetxt("brls.estimated.cnnviens_step1.txt",brls_summary,fmt='%f')
     
+    print("Generating training inputs from weak learners")
+    brls_posterior_train, brls_evals_train  = mc_dropout(X_test = X_train, Y_test = Y_train, model = model_cnnvi_reg)
+    #np.savetxt("brls.posterior.cnnviens_train.txt", brls_posterior_train,fmt='%f')
+    model_mlp_reg=build_MLP_brl(X_train=brls_posterior_train,Y_train=Y_train,droput_rates=0.15,batch_sizes=100)
+    evals_reg = model_mlp_reg.evaluate(brls_posterior,Y_test,batch_size=100, verbose=1, steps=None)
+    bls = model_mlp_reg.predict(brls_posterior,batch_size=100, verbose=1, steps=None)
+    np.savetxt("brls.evaluated.cnnviens_step2.txt",evals_reg,fmt='%f')
+    np.savetxt("brls.predicted.cnnviens_step2.txt",np.exp(bls),fmt='%f')
+      
     #Saving model
     print("\nSaving keras trained model")
-    model_cnnvi_reg.save("keras_model_cnnvi.h5")
-    tf.keras.utils.plot_model(model_cnnvi_reg, to_file='model_cnnvi.png', show_shapes=True)
+    model_cnnvi_reg.save("keras_model_cnnviens.h5")
+    tf.keras.utils.plot_model(model_cnnvi_reg, to_file='model_cnnviens.png', show_shapes=True)
 
     
 if __name__ == "__main__":

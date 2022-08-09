@@ -10,12 +10,12 @@ from scipy.stats import multinomial, chi2, bayes_mvs
 from math import factorial
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.layers import Input, Dense, Flatten, Dropout, BatchNormalization, ZeroPadding2D, Activation
-from tensorflow.keras.layers import Conv2D
+from tensorflow.keras.layers import Conv2D, LSTM
 from tensorflow.keras.layers import MaxPooling2D, AveragePooling2D
-from tensorflow.keras.layers import concatenate
+from tensorflow.keras.layers import concatenate, TimeDistributed, Reshape
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from tensorflow.keras.optimizers import Adam
-
+from tensorflow.keras.regularizers import L1, L2, L1L2
 #Set seed
 seed = np.random.randint(0,2**32 - 1,1)
 np.random.seed(seed)
@@ -41,45 +41,15 @@ def aggregate_Yinput(Y_files_in):
     Y_aggr = np.concatenate(Y_aggr)
     return(Y_aggr)
 
-def mc_dropout(X_test,Y_test, model):
-    brls_posterior=[]
-    brls_eval=[]
-    print("Performing MC dropout draws")
-    for i in range(0,100):
-        
-        evals_reg = model.evaluate(X_test, Y_test,batch_size=100, verbose=1, steps=None)
-        brls = model.predict(X_test, batch_size=100, verbose=1, steps=None)
-        brls_eval.append(evals_reg)
-        brls_posterior.append(brls)
-    
-    brls_exped = np.exp(np.concatenate(brls_posterior,axis=-1))
-    return brls_exped, brls_eval
-    
-def posterior_summary(brls_posterior, Y_test):
-    print("Summarizing posterior and calculating credible intervals")
-    N_branch = Y_test.shape[1] 
-    brls_summary=[]
-    for i in range(len(brls_posterior)):
-        summaries_per_br = []
-        posterior_v = brls_posterior[i,:]
-        posterior_v_len = len(posterior_v)
-        for br in range(N_branch):
-            posterior_br = posterior_v[range(br,posterior_v_len,N_branch)]
-            summaries = list(bayes_mvs(posterior_br,alpha=0.95)[0])
-            summaries_per_br.append([summaries[0],summaries[1][0],summaries[1][1]])
-        brls_summary.append(np.array(summaries_per_br).flatten('F'))
-    return(brls_summary)
-
-
-#CNN regression: inference of branch lengths of unrooted trees 
-def build_CNNVI_brl(X_train,Y_train,conv_pool_n,filter_n,droput_rates,batch_sizes):
+#CNN regression: inference of branch lengths
+def build_LSTMCNN_brl(X_train,Y_train,conv_pool_n,filter_n,droput_rates,batch_sizes):
     
     # Length of MSA, i.e. number of sites 
     Aln_length = X_train.shape[2]
     # Number of taxa in MSA
     Ntaxa = X_train.shape[1]
     #Number of branches of a tree
-    N_branch = Y_train.shape[1] 
+    N_branch = Y_train.shape[1]
     
     
     #1. MSA CNN branch 1 
@@ -93,24 +63,24 @@ def build_CNNVI_brl(X_train,Y_train,conv_pool_n,filter_n,droput_rates,batch_size
 
     print(f"N convolutional layers: {conv_pool_n}\nN fileters: {filter_n}\nDropout rate: {droput_rates}\nBatch size: {batch_sizes}")
    
+    visible_msa = Input(shape=(Ntaxa,Aln_length,1))    
+    visible_lstm = Reshape((Aln_length,Ntaxa))(visible_msa)
+    lstm_out = LSTM(200,return_sequences=True)(visible_lstm)
+    
     # CNN Arhitecture
-    visible_msa = Input(shape=(Ntaxa,Aln_length,1))
     x = visible_msa
     for l in list(range(0,conv_pool_n)):
-        x = ZeroPadding2D(padding=((0, 0), (0,conv_y[l]-1)))(x)        
+        x = ZeroPadding2D(padding=((0, 0), (0,conv_y[l]-1)))(x)
         x = Conv2D(filters=filter_s[l], kernel_size=(conv_x[l], conv_y[l]), strides=1,activation='relu')(x)
-        x = Dropout(rate=droput_rates)(x,training=True)
+        x = Dropout(rate=droput_rates)(x)
         x = BatchNormalization()(x)
         x = AveragePooling2D(pool_size=(1,pool[l]))(x)
-        x = Dropout(rate=droput_rates)(x,training=True)
+        x = Dropout(rate=droput_rates)(x)
     output_msa = Flatten()(x)
-    
-    
-    hidden1 = Dense(1000,activation='relu')(output_msa)
-    drop1 = Dropout(rate=droput_rates)(hidden1,training=True)
+    merge = concatenate([output_msa,lstm_out])
+    hidden1 = Dense(2000, activation='relu')(merge)
+    drop1 = Dropout(rate=droput_rates)(hidden1)
     output = Dense(N_branch, activation='linear')(drop1)
-    
-
     model_cnn = Model(inputs=visible_msa, outputs=output)
     model_cnn.compile(loss='mean_squared_error',optimizer='adam',metrics=['mae','mse'])
     
@@ -119,9 +89,10 @@ def build_CNNVI_brl(X_train,Y_train,conv_pool_n,filter_n,droput_rates,batch_size
    
     #Model stopping criteria
     callback1=EarlyStopping(monitor='val_loss', min_delta=0.001, patience=10, verbose=1, mode='auto')
-    callback2=ModelCheckpoint('best_weights_cnnvi', monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=False, mode='auto', save_freq='epoch')    
+    callback2=ModelCheckpoint('best_weights_cnn', monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=False, mode='auto', save_freq='epoch')    
 
-    model_cnn.fit(x=X_train,y=Y_train,batch_size=batch_sizes,callbacks=[callback1,callback2],epochs=100,verbose=1,shuffle=True,validation_split=0.1)
+    tf.keras.utils.plot_model(model_cnn, to_file='model_lstmcnn.png', show_shapes=True)
+    model_cnn.fit(x=X_train,y=Y_train,batch_size=batch_sizes,callbacks=[callback1,callback2],epochs=400,verbose=1,shuffle=True,validation_split=0.1)
     return(model_cnn)
  
 
@@ -152,23 +123,18 @@ def main():
 
     #Regression BL
     #Run model
-    model_cnnvi_reg=build_CNNVI_brl(X_train=X_train,Y_train=Y_train,conv_pool_n=6,filter_n=100,droput_rates=0.15,batch_sizes=100)
+    model_lstmcnn_reg=build_LSTMCNN_brl(X_train=X_train,Y_train=Y_train,conv_pool_n=6,filter_n=100,droput_rates=0.15,batch_sizes=100)
     
     #Evaluate model
-    brls_posterior, brls_evals  = mc_dropout(X_test = X_test, Y_test = Y_test, model = model_cnnvi_reg)
-    np.savetxt("brls.evaluated.cnnvi.txt",np.array(brls_evals),fmt='%f')
-    np.savetxt("brls.posterior.cnnvi.txt",brls_posterior,fmt='%f')
-    
-    #Summarize model posterior
-    brls_summary = posterior_summary(brls_posterior = brls_posterior, Y_test = Y_test)
-    np.savetxt("brls.estimated.cnnvi.txt",brls_summary,fmt='%f')
+    evals_reg = model_lstmcnn_reg.evaluate(X_test,Y_test,batch_size=100, verbose=1, steps=None)
+    bls = model_lstmcnn_reg.predict(X_test,batch_size=100, verbose=1, steps=None)
+    np.savetxt("brls.evaluated.lstmcnn.txt",evals_reg,fmt='%f')
+    np.savetxt("brls.predicted.lstmcnn.txt",np.exp(bls),fmt='%f')
     
     #Saving model
     print("\nSaving keras trained model")
-    model_cnnvi_reg.save("keras_model_cnnvi.h5")
-    tf.keras.utils.plot_model(model_cnnvi_reg, to_file='model_cnnvi.png', show_shapes=True)
+    model_lstmcnn_reg.save("keras_model_lstmcnn.h5")
 
     
 if __name__ == "__main__":
     main()
-    
