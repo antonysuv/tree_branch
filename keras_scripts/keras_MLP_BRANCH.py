@@ -43,17 +43,20 @@ def aggregate_Yinput(Y_files_in):
 def get_site_patterns(array_in):
     N_alns = array_in.shape[0]
     N_taxa = array_in.shape[1]
-    character_alphabet = ''.join(map(str,np.unique(array_in)))
+    character_alphabet = list(map(str,np.unique(array_in)))
+    character_alphabet = [item for item in character_alphabet if item != '-15']
     site_patterns = list(product(character_alphabet,repeat = N_taxa))
-    site_patterns = list(map(''.join,site_patterns))
+    site_patterns = list(map('_'.join,site_patterns))
+    print(f"\nTotal site patterns: {len(site_patterns)}")
     dtype = [tuple([i,"f8"]) for i in site_patterns]
     struc_array = np.zeros(N_alns, dtype=dtype)
     #dic_patterns = dict.fromkeys(site_patterns,np.repeat(0,N_alns))
     for i in range(N_alns):
         aln = array_in[i,:,:]
+        aln = aln[:,(aln != -15).any(axis=0)]
         Aln_length = aln.shape[1] 
         for s in range(Aln_length):     
-            array_key = ''.join((map(str,aln[:,s].flatten())))
+            array_key = '_'.join((map(str,aln[:,s].flatten())))
             struc_array[array_key][i]+=1/Aln_length  
     return(struc_array.view((float,len(struc_array.dtype.names))))     
 
