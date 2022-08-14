@@ -71,11 +71,11 @@ def build_MLP_brl(X_train,Y_train,droput_rates,batch_sizes):
     N_branch = Y_train.shape[1]
     
     visible_layer = Input(shape=(N_patterns,))
-    hidden1 = Dense(10000,activation='relu')(visible_layer)
+    hidden1 = Dense(1000,activation='relu')(visible_layer)
     drop1 = Dropout(rate=droput_rates)(hidden1)
-    hidden2 = Dense(10000,activation='relu')(drop1)
+    hidden2 = Dense(1000,activation='relu')(drop1)
     drop2 = Dropout(rate=droput_rates)(hidden2)
-    hidden3 = Dense(10000,activation='relu')(drop2)
+    hidden3 = Dense(1000,activation='relu')(drop2)
     drop3 = Dropout(rate=droput_rates)(hidden3)
     output = Dense(N_branch, activation='linear')(drop3)
     

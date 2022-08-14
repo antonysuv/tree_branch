@@ -118,10 +118,10 @@ def build_CNNVI_brl(X_train,Y_train,conv_pool_n,filter_n,droput_rates,batch_size
     print(model_cnn.summary())
    
     #Model stopping criteria
-    callback1=EarlyStopping(monitor='val_loss', min_delta=0.001, patience=10, verbose=1, mode='auto')
+    callback1=EarlyStopping(monitor='val_loss', min_delta=0.001, patience=20, verbose=1, mode='auto')
     callback2=ModelCheckpoint('best_weights_cnnvi', monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=False, mode='auto', save_freq='epoch')    
 
-    model_cnn.fit(x=X_train,y=Y_train,batch_size=batch_sizes,callbacks=[callback1,callback2],epochs=100,verbose=1,shuffle=True,validation_split=0.1)
+    model_cnn.fit(x=X_train,y=Y_train,batch_size=batch_sizes,callbacks=[callback1,callback2],epochs=400,verbose=1,shuffle=True,validation_split=0.1)
     return(model_cnn)
  
 
@@ -152,7 +152,7 @@ def main():
 
     #Regression BL
     #Run model
-    model_cnnvi_reg=build_CNNVI_brl(X_train=X_train,Y_train=Y_train,conv_pool_n=6,filter_n=100,droput_rates=0.15,batch_sizes=100)
+    model_cnnvi_reg=build_CNNVI_brl(X_train=X_train,Y_train=Y_train,conv_pool_n=6,filter_n=1000,droput_rates=0.15,batch_sizes=100)
     
     #Evaluate model
     brls_posterior, brls_evals  = mc_dropout(X_test = X_test, Y_test = Y_test, model = model_cnnvi_reg)

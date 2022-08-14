@@ -73,14 +73,12 @@ def build_CNN_brl(X_train,Y_train,conv_pool_n,filter_n,droput_rates,batch_sizes)
         x = BatchNormalization()(x)
         x = AveragePooling2D(pool_size=(1,pool[l]))(x)
         x = Dropout(rate=droput_rates)(x)
-    output_msa = Flatten()(x)
-    
+    output_msa = Flatten()(x) 
     
     hidden1 = Dense(1000,activation='relu')(output_msa)
     drop1 = Dropout(rate=droput_rates)(hidden1)
     output = Dense(N_branch, activation='linear')(drop1)
     
-
     model_cnn = Model(inputs=visible_msa, outputs=output)
     model_cnn.compile(loss='mean_squared_error',optimizer='adam',metrics=['mae','mse'])
     
@@ -122,13 +120,16 @@ def main():
 
     #Regression BL
     #Run model
-    model_cnn_reg=build_CNN_brl(X_train=X_train,Y_train=Y_train,conv_pool_n=6,filter_n=100,droput_rates=0.15,batch_sizes=100)
+    model_cnn_reg=build_CNN_brl(X_train=X_train,Y_train=Y_train,conv_pool_n=6,filter_n=1000,droput_rates=0.15,batch_sizes=100)
     
     #Evaluate model
     evals_reg = model_cnn_reg.evaluate(X_test,Y_test,batch_size=100, verbose=1, steps=None)
     bls = model_cnn_reg.predict(X_test,batch_size=100, verbose=1, steps=None)
     np.savetxt("brls.evaluated.cnn.txt",evals_reg,fmt='%f')
     np.savetxt("brls.predicted.cnn.txt",np.exp(bls),fmt='%f')
+    train_bls = model_cnn_reg.predict(X_train,batch_size=100, verbose=1, steps=None)
+    np.savetxt("brls.predicted_train.cnn.txt",np.exp(train_bls),fmt='%f')
+    
     
     #Saving model
     print("\nSaving keras trained model")
