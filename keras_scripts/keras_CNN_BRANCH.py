@@ -34,8 +34,7 @@ def aggregate_Xinput(X_files_in):
 def aggregate_Yinput(Y_files_in):
     Y_aggr = []
     for Y_file in Y_files_in:
-        #Log transforming branch lengths to avoid negative values
-        Y_part = np.log(np.genfromtxt(Y_file))
+        Y_part = np.genfromtxt(Y_file)
         Y_aggr.append(Y_part)
     Y_aggr = np.array(Y_aggr)
     Y_aggr = np.concatenate(Y_aggr)
@@ -99,8 +98,9 @@ def main():
     parser.add_argument( '--te', help = "Test MSAs dataset in npy",nargs='+',dest='TEST')
     parser.add_argument( '--trl', help = "Training branch lengths in csv",nargs='+',dest='LABTRAIN')
     parser.add_argument( '--tel', help = "Test branch lengths in csv",nargs='+',dest='LABTEST')
+    parser.add_argument( '--trans', default = "none", help = "Branch length transformation",nargs='+',dest='TRANS')
     
-    args = parser.parse_args()
+    args = parser.parse_args()default=0.0
     
     #Read inputs
     print("\n==========Reading training data==========")
@@ -117,7 +117,10 @@ def main():
     print(f"\nConcatenating {args.LABTEST} Y datasets in order")
     Y_test = aggregate_Yinput(args.LABTEST)
 
-
+    if args.TRANS != "none":
+        Y_test = np.log(Y_test)
+        Y_train = np.log(Y_train)
+        
     #Regression BL
     #Run model
     model_cnn_reg=build_CNN_brl(X_train=X_train,Y_train=Y_train,conv_pool_n=6,filter_n=1000,droput_rates=0.15,batch_sizes=100)
@@ -125,10 +128,19 @@ def main():
     #Evaluate model
     evals_reg = model_cnn_reg.evaluate(X_test,Y_test,batch_size=100, verbose=1, steps=None)
     bls = model_cnn_reg.predict(X_test,batch_size=100, verbose=1, steps=None)
-    np.savetxt("brls.evaluated.cnn.txt",evals_reg,fmt='%f')
-    np.savetxt("brls.predicted.cnn.txt",np.exp(bls),fmt='%f')
-    train_bls = model_cnn_reg.predict(X_train,batch_size=100, verbose=1, steps=None)
-    np.savetxt("brls.predicted_train.cnn.txt",np.exp(train_bls),fmt='%f')
+    
+    if args.TRANS != "none":
+        np.savetxt("brls.evaluated.cnn.log.txt",evals_reg,fmt='%f')
+        np.savetxt("brls.predicted.cnn.log.txt",np.exp(bls),fmt='%f')
+    else:
+        np.savetxt("brls.evaluated.cnn.txt",evals_reg,fmt='%f')
+        np.savetxt("brls.predicted.cnn.txt",bls,fmt='%f')
+        
+        
+    #train_bls = model_cnn_reg.predict(X_train,batch_size=100, verbose=1, steps=None)
+    
+    
+    #np.savetxt("brls.predicted_train.cnn.txt",np.exp(train_bls),fmt='%f')
     
     
     #Saving model
