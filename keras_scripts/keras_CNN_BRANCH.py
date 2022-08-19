@@ -98,9 +98,9 @@ def main():
     parser.add_argument( '--te', help = "Test MSAs dataset in npy",nargs='+',dest='TEST')
     parser.add_argument( '--trl', help = "Training branch lengths in csv",nargs='+',dest='LABTRAIN')
     parser.add_argument( '--tel', help = "Test branch lengths in csv",nargs='+',dest='LABTEST')
-    parser.add_argument( '--trans', default = "none", help = "Branch length transformation",nargs='+',dest='TRANS')
+    parser.add_argument( '--trans', default = "none", help = "Branch length transformation",dest='TRANS')
     
-    args = parser.parse_args()default=0.0
+    args = parser.parse_args()
     
     #Read inputs
     print("\n==========Reading training data==========")
@@ -117,9 +117,20 @@ def main():
     print(f"\nConcatenating {args.LABTEST} Y datasets in order")
     Y_test = aggregate_Yinput(args.LABTEST)
 
-    if args.TRANS != "none":
+    if args.TRANS == "none":
+        print("\n==========NO branch length transformation==========")
+        pass
+    elif args.TRANS == "log":
+        print("\n==========LOG branch length transformation==========")
         Y_test = np.log(Y_test)
         Y_train = np.log(Y_train)
+    elif args.TRANS == "sqrt":
+        print("\n==========SQUARE ROOT branch length transformation==========")
+        Y_test = np.sqrt(Y_test)
+        Y_train = np.sqrt(Y_train)
+    else:
+        print("\n==========NO branch length transformation==========")
+        pass
         
     #Regression BL
     #Run model
@@ -129,20 +140,23 @@ def main():
     evals_reg = model_cnn_reg.evaluate(X_test,Y_test,batch_size=100, verbose=1, steps=None)
     bls = model_cnn_reg.predict(X_test,batch_size=100, verbose=1, steps=None)
     
-    if args.TRANS != "none":
+    train_bls = model_cnn_reg.predict(X_train,batch_size=100, verbose=1, steps=None)
+    
+    
+    if args.TRANS == "log":
         np.savetxt("brls.evaluated.cnn.log.txt",evals_reg,fmt='%f')
         np.savetxt("brls.predicted.cnn.log.txt",np.exp(bls),fmt='%f')
+        np.savetxt("brls.predicted_train.cnn.log.txt",np.exp(train_bls),fmt='%f')
+        
+    elif args.TRANS == "sqrt":
+        np.savetxt("brls.evaluated.cnn.sqrt.txt",evals_reg,fmt='%f')
+        np.savetxt("brls.predicted.cnn.sqrt.txt",np.power(bls,2),fmt='%f')
+        np.savetxt("brls.predicted_train.cnn.sqrt.txt",np.power(train_bls,2),fmt='%f')
     else:
         np.savetxt("brls.evaluated.cnn.txt",evals_reg,fmt='%f')
         np.savetxt("brls.predicted.cnn.txt",bls,fmt='%f')
+        np.savetxt("brls.predicted_train.cnn.txt",train_bls,fmt='%f')
         
-        
-    #train_bls = model_cnn_reg.predict(X_train,batch_size=100, verbose=1, steps=None)
-    
-    
-    #np.savetxt("brls.predicted_train.cnn.txt",np.exp(train_bls),fmt='%f')
-    
-    
     #Saving model
     print("\nSaving keras trained model")
     model_cnn_reg.save("model_cnn.h5")
