@@ -1,22 +1,21 @@
 #!/usr/bin/env python
 import tensorflow as tf
 import time
-#import pandas
+import pandas
 from itertools import product
 import sys, argparse, os
 import numpy as np
 from math import log, ceil
-#from scipy.stats import multinomial, chi2, bayes_mvs
+from scipy.stats import multinomial, chi2, bayes_mvs
 from math import factorial
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.layers import Input, Dense, Flatten, Dropout, BatchNormalization, ZeroPadding2D, Activation
-from tensorflow.keras.layers import Conv2D
+from tensorflow.keras.layers import Conv2D, Conv2DTranspose
 from tensorflow.keras.layers import MaxPooling2D, AveragePooling2D
 from tensorflow.keras.layers import concatenate
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.regularizers import L1, L2, L1L2
-from sklearn.linear_model import LinearRegression
 #Set seed
 seed = np.random.randint(0,2**32 - 1,1)
 np.random.seed(seed)
@@ -42,7 +41,7 @@ def aggregate_Yinput(Y_files_in):
     return(Y_aggr)
 
 #CNN regression: inference of branch lengths
-def build_CNN_brl(X_train,Y_train,conv_pool_n,droput_rates,batch_sizes):
+def build_CNN_brl(X_train,Y_train,conv_pool_n,filter_n,droput_rates,batch_sizes):
     
     # Length of MSA, i.e. number of sites 
     Aln_length = X_train.shape[2]
@@ -61,50 +60,40 @@ def build_CNN_brl(X_train,Y_train,conv_pool_n,droput_rates,batch_sizes):
     pool=[1,4,4,4,2,2,2,1]
     filter_s=[1024,1024,128,128,128,128,128,128]
 
-    print(f"N convolutional layers: {conv_pool_n}\nDropout rate: {droput_rates}\nBatch size: {batch_sizes}")
+    print(f"N convolutional layers: {conv_pool_n}\nN fileters: {filter_n}\nDropout rate: {droput_rates}\nBatch size: {batch_sizes}")
    
     # CNN Arhitecture
     visible_msa = Input(shape=(Ntaxa,Aln_length,1))
+    
+    visible_msa = Input(shape=(Ntaxa,Aln_length,1))
     x = visible_msa
-    for l in list(range(0,conv_pool_n)):
-        x = ZeroPadding2D(padding=((0, 0), (0,conv_y[l]-1)))(x)        
-        x = Conv2D(filters=filter_s[l], kernel_size=(conv_x[l], conv_y[l]), strides=1,activation='relu')(x)
-        x = Dropout(rate=droput_rates)(x)
-        x = AveragePooling2D(pool_size=(1,pool[l]))(x)
-        x = Dropout(rate=droput_rates)(x)
-    output_msa = Flatten()(x) 
+    #Encoder
+    for l in list(range(0,conv_pool_n)):   
+        x = Conv2D(filters=filter_s[l], kernel_size=(conv_x[l], conv_y[l]), strides=1, padding="same",activation='relu')(x)
+        x = AveragePooling2D(pool_size=(1,pool[l]),padding="same")(x)
+    #Decoder
+    #Decoder
+    x = Conv2DTranspose(filters=filter_s[l], kernel_size=(1, 2), strides=(1,5), activation="relu", padding="same")(x)
+    x = Conv2DTranspose(filters=filter_s[l], kernel_size=(1, 2), strides=(1,50), activation="relu", padding="same")(x)
+    x = Conv2D(1, (Ntaxa, 1), activation="sigmoid", padding="same")(x)
     
-    hidden1 = Dense(1000,activation='relu')(output_msa)
-    drop1 = Dropout(rate=droput_rates)(hidden1)
-    output = Dense(N_branch, activation='linear')(drop1)
     
-    model_cnn = Model(inputs=visible_msa, outputs=output)
-    model_cnn.compile(loss='mean_squared_error',optimizer='adam',metrics=['mae','mse'])
+    autoencoder = Model(visible_msa,x)
+    autoencoder.compile(optimizer="adam", loss="binary_crossentropy")
     
     #Print model
-    print(model_cnn.summary())
+    print(autoencoder.summary())
    
     #Model stopping criteria
-    callback1=EarlyStopping(monitor='val_loss', min_delta=0.001, patience=10, verbose=1, mode='auto')
+    callback1=EarlyStopping(monitor='val_loss', min_delta=0.001, patience=20, verbose=1, mode='auto')
     callback2=ModelCheckpoint('best_weights_cnn', monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=False, mode='auto', save_freq='epoch')    
 
-    tf.keras.utils.plot_model(model_cnn, to_file='model_cnn.png', show_shapes=True)
+    tf.keras.utils.plot_model(autoencoder, to_file='model_cnn.png', show_shapes=True)
     
-    model_cnn.fit(x=X_train,y=Y_train,batch_size=batch_sizes,callbacks=[callback1,callback2],epochs=400,verbose=1,shuffle=True,validation_split=0.1)
-    return(model_cnn)
+    autoencoder.fit(x=X_train,y=X_train,batch_size=batch_sizes,callbacks=[callback1,callback2],epochs=400,verbose=1,shuffle=True,validation_split=0.1)
+    return(autoencoder)
+ 
 
-def linear_regressor(X,Y,batch_sizes):
-    
-    N_branch = Y.shape[1]
-    input_vector = Input(shape=(N_branch,))
-    output = Dense(N_branch, activation='linear')(input_vector)
-    model_reg = Model(inputs=input_vector, outputs=output)
-    model_reg.compile(loss='mean_squared_error',optimizer='adam',metrics=['mae','mse']) 
-    callback1=EarlyStopping(monitor='val_loss', min_delta=0.001, patience=10, verbose=1, mode='auto')
-    callback2=ModelCheckpoint('best_weights_regressor', monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=False, mode='auto', save_freq='epoch')
-    model_reg.fit(x=X,y=Y,batch_size=batch_sizes,callbacks=[callback1,callback2],epochs=400,verbose=1,shuffle=True,validation_split=0.1)
-    return(model_reg)
-    
 def main():
     parser = argparse.ArgumentParser(description='Keras run')
     parser.add_argument( '--tr', help = "Training MSAs dataset in npy",nargs='+',dest='TRAIN')
@@ -147,38 +136,24 @@ def main():
         
     #Regression BL
     #Run model
-    model_cnn_reg=build_CNN_brl(X_train=X_train,Y_train=Y_train,conv_pool_n=6,droput_rates=0,batch_sizes=32)
+    model_cnn_reg=build_CNN_brl(X_train=X_train,Y_train=Y_train,conv_pool_n=6,filter_n=1000,droput_rates=0.15,batch_sizes=100)
     
     #Evaluate model
     evals_reg = model_cnn_reg.evaluate(X_test,Y_test,batch_size=100, verbose=1, steps=None)
     bls = model_cnn_reg.predict(X_test,batch_size=100, verbose=1, steps=None)
-    train_bls = model_cnn_reg.predict(X_train,batch_size=100, verbose=1, steps=None)
     
-    print("\n==========Starting ROE==========")
-    #Regression of observed on estimated values (ROE) for bias correction
-    model_lin_reg = linear_regressor(X=train_bls,Y=Y_train,batch_sizes=32)
-    train_bls_reg = model_lin_reg.predict(train_bls,batch_size=100, verbose=1, steps=None)
-    residue = Y_train - train_bls_reg
-    bls_regs = model_lin_reg.predict(bls,batch_size=100, verbose=1, steps=None)
-    model_skl_lin_reg = LinearRegression().fit(train_bls,Y_train)
-    skl_bls_regs = model_skl_lin_reg.predict(bls)
+    train_bls = model_cnn_reg.predict(X_train,batch_size=100, verbose=1, steps=None)
     
     
     if args.TRANS == "log":
         np.savetxt("brls.evaluated.cnn.log.txt",evals_reg,fmt='%f')
         np.savetxt("brls.predicted.cnn.log.txt",np.exp(bls),fmt='%f')
         np.savetxt("brls.predicted_train.cnn.log.txt",np.exp(train_bls),fmt='%f')
-        np.savetxt("brls.predicted.cnn.reg.log.txt",np.exp(bls_regs),fmt='%f')
-        np.savetxt("brls.residues.log.txt",residue,fmt='%f')
-        np.savetxt("brls.predicted.cnn.sklreg.log.txt",skl_bls_regs,fmt='%f')
         
     elif args.TRANS == "sqrt":
         np.savetxt("brls.evaluated.cnn.sqrt.txt",evals_reg,fmt='%f')
         np.savetxt("brls.predicted.cnn.sqrt.txt",np.power(bls,2),fmt='%f')
         np.savetxt("brls.predicted_train.cnn.sqrt.txt",np.power(train_bls,2),fmt='%f')
-        np.savetxt("brls.predicted.cnn.reg.sqrt.txt",np.power(bls_regs,2),fmt='%f')
-        np.savetxt("brls.residues.sqrt.txt",residue,fmt='%f')
-        np.savetxt("brls.predicted.cnn.sklreg.sqrt.txt",skl_bls_regs,fmt='%f')
     else:
         np.savetxt("brls.evaluated.cnn.txt",evals_reg,fmt='%f')
         np.savetxt("brls.predicted.cnn.txt",bls,fmt='%f')

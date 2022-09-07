@@ -183,7 +183,7 @@ def main():
 
     #Regression BL
     #Run model
-    model_cnnvi_reg=build_CNNVI_brl(X_train=X_train,Y_train=Y_train,conv_pool_n=6,filter_n=100,droput_rates=0.25,batch_sizes=100)
+    model_cnnvi_reg=build_CNNVI_brl(X_train=X_train,Y_train=Y_train,conv_pool_n=6,filter_n=100,droput_rates=0.25,batch_sizes=32)
     
     #Evaluate model
     brls_posterior, brls_evals  = mc_dropout(X_test = X_test, Y_test = Y_test, model = model_cnnvi_reg)
@@ -196,9 +196,9 @@ def main():
     
     print("Generating training inputs from weak learners")
     brls_posterior_train, brls_evals_train  = mc_dropout(X_test = X_train, Y_test = Y_train, model = model_cnnvi_reg)
-    #np.savetxt("brls.posterior.cnnviens_train.txt", brls_posterior_train,fmt='%f')
-    model_mlp_reg=build_MLP_brl(X_train=brls_posterior_train,Y_train=Y_train,droput_rates=0.15,batch_sizes=100)
-    evals_reg = model_mlp_reg.evaluate(brls_posterior,Y_test,batch_size=100, verbose=1, steps=None)
+    np.savetxt("brls.posterior.cnnviens_train.txt", brls_posterior_train,fmt='%f')
+    model_mlp_reg=build_MLP_brl(X_train=brls_posterior_train,Y_train=np.exp(Y_train),droput_rates=0.15,batch_sizes=32)
+    evals_reg = model_mlp_reg.evaluate(brls_posterior,np.exp(Y_test),batch_size=100, verbose=1, steps=None)
     bls = model_mlp_reg.predict(brls_posterior,batch_size=100, verbose=1, steps=None)
     np.savetxt("brls.evaluated.cnnviens_step2.txt",evals_reg,fmt='%f')
     np.savetxt("brls.predicted.cnnviens_step2.txt",np.exp(bls),fmt='%f')
