@@ -10,7 +10,7 @@ from math import log, ceil
 from math import factorial
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.layers import Input, Dense, Flatten, Dropout, BatchNormalization, ZeroPadding2D, Activation
-from tensorflow.keras.layers import Conv2D
+from tensorflow.keras.layers import Conv2D, Conv1D
 from tensorflow.keras.layers import MaxPooling2D, AveragePooling2D
 from tensorflow.keras.layers import concatenate
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
@@ -60,21 +60,31 @@ def build_CNN_brl(X_train,Y_train,conv_pool_n,droput_rates,batch_sizes):
     conv_x=[Ntaxa,1,1,1,1,1,1,1]
     #Width (vertical)
     conv_y=[1,2,2,2,2,2,2,2]
-    pool=[1,4,4,4,2,2,2,1]
+    pool=[4,4,4,4,2,2,2,1]
     filter_s=[1024,1024,128,128,128,128,128,128]
 
     print(f"N convolutional layers: {conv_pool_n}\nDropout rate: {droput_rates}\nBatch size: {batch_sizes}")
    
     # CNN Arhitecture
-    visible_msa = Input(shape=(Ntaxa,Aln_length,1))
+    visible_msa = Input(shape=(Ntaxa,Aln_length))
     x = visible_msa
+    #for l in list(range(0,conv_pool_n)):
+    #    x = ZeroPadding2D(padding=((0, 0), (0,conv_y[l]-1)))(x)
+    #    x = Conv2D(filters=filter_s[l], kernel_size=(conv_x[l], conv_y[l]), strides=1,activation='relu')(x)
+    #    x = Dropout(rate=droput_rates)(x)
+    #    x = AveragePooling2D(pool_size=(1,pool[l]))(x)
+    #    x = Dropout(rate=droput_rates)(x)
     for l in list(range(0,conv_pool_n)):
-        x = ZeroPadding2D(padding=((0, 0), (0,conv_y[l]-1)))(x)        
-        x = Conv2D(filters=filter_s[l], kernel_size=(conv_x[l], conv_y[l]), strides=1,activation='relu')(x)
+        x = Conv1D(filters=filter_s[l], kernel_size=conv_x[l], strides=1,activation='relu')(x)
         x = Dropout(rate=droput_rates)(x)
-        x = AveragePooling2D(pool_size=(1,pool[l]))(x)
+        x = AveragePooling2D(pool_size=(1,2))(x)
         x = Dropout(rate=droput_rates)(x)
-    output_msa = Flatten()(x) 
+    
+    
+    
+    
+    output_msa = Flatten()(x)
+
     
     hidden1 = Dense(1000,activation='relu')(output_msa)
     drop1 = Dropout(rate=droput_rates)(hidden1)
@@ -178,7 +188,7 @@ def main():
         
     #Regression BL
     #Run model
-    model_cnn_reg=build_CNN_brl(X_train=X_train,Y_train=Y_train,conv_pool_n=6,droput_rates=0,batch_sizes=32)
+    model_cnn_reg=build_CNN_brl(X_train=X_train,Y_train=Y_train,conv_pool_n=3,droput_rates=0.0,batch_sizes=32)
     
     #Evaluate model
     evals_reg = model_cnn_reg.evaluate(X_test,Y_test,batch_size=100, verbose=1, steps=None)
