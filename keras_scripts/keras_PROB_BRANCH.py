@@ -120,7 +120,7 @@ def main():
     parser.add_argument( '--te', help = "Test MSAs dataset in npy",nargs='+',dest='TEST')
     parser.add_argument( '--trl', help = "Training branch lengths in csv",nargs='+',dest='LABTRAIN')
     parser.add_argument( '--tel', help = "Test branch lengths in csv",nargs='+',dest='LABTEST')
-    parser.add_argument( '--trans', default = "none", help = "Branch length transformation",dest='TRANS')
+    parser.add_argument( '--trans', default = "none", help = "Branch length transformation log, sqrt",dest='TRANS')
     
     args = parser.parse_args()
     

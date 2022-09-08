@@ -16,7 +16,9 @@ from tensorflow.keras.layers import concatenate
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.regularizers import L1, L2, L1L2
-from sklearn.linear_model import LinearRegression
+import tensorflow_probability as tfp
+tfd = tfp.distributions
+#from sklearn.linear_model import LinearRegression
 #Set seed
 seed = np.random.randint(0,2**32 - 1,1)
 np.random.seed(seed)
@@ -105,6 +107,35 @@ def linear_regressor(X,Y,batch_sizes):
     model_reg.fit(x=X,y=Y,batch_size=batch_sizes,callbacks=[callback1,callback2],epochs=400,verbose=1,shuffle=True,validation_split=0.1)
     return(model_reg)
     
+
+
+def prior(kernel_size, bias_size, dtype=None):
+    n = kernel_size + bias_size
+    prio = Sequential([tfp.layers.VariableLayer(n, dtype=dtype),
+    tfp.layers.DistributionLambda(lambda t: tfd.Independent(tfd.Normal(loc=t, scale=1),reinterpreted_batch_ndims=1))])
+    return prio    
+    
+def posterior(kernel_size, bias_size, dtype=None) -> tf.keras.Model():
+    n = kernel_size + bias_size
+    c = np.log(np.expm1(1.))
+    post = Sequential([tfp.layers.VariableLayer(2 * n, dtype=dtype),
+    tfp.layers.DistributionLambda(lambda t: tfd.Independent(tfd.Normal(loc=t[..., :n],scale=1e-5 + tf.nn.softplus(c + t[..., n:])),reinterpreted_batch_ndims=1))])
+    return post    
+    
+def linear_regressor_bayes(X,Y,batch_sizes):    
+    in_shape = X.shape[1]
+    N_branch = Y.shape[1]
+    model_bayes = Sequential([tfp.layers.DenseVariational(100, activation="relu",input_shape = [in_shape], kl_weight=1/X.shape[0],make_posterior_fn = posterior,make_prior_fn = prior),Dense(100,activation="relu"),Dense(N_branch,activation="linear"),])
+    model_bayes.compile(loss='mean_squared_error',optimizer='adam',metrics=['mae','mse'])
+    model_bayes.fit(x=X,y=Y,batch_size=batch_sizes,epochs=150,verbose=1,shuffle=True,validation_split=0.1)
+    return(model_bayes)
+    
+    
+#yhat = np.concatenate([ss.predict(Xtest,batch_size=100, verbose=1, steps=None) for _ in range(100)],axis = 1)    
+    
+    
+    
+    
 def main():
     parser = argparse.ArgumentParser(description='Keras run')
     parser.add_argument( '--tr', help = "Training MSAs dataset in npy",nargs='+',dest='TRAIN')
@@ -160,8 +191,8 @@ def main():
     train_bls_reg = model_lin_reg.predict(train_bls,batch_size=100, verbose=1, steps=None)
     residue = Y_train - train_bls_reg
     bls_regs = model_lin_reg.predict(bls,batch_size=100, verbose=1, steps=None)
-    model_skl_lin_reg = LinearRegression().fit(train_bls,Y_train)
-    skl_bls_regs = model_skl_lin_reg.predict(bls)
+    #model_skl_lin_reg = LinearRegression().fit(train_bls,Y_train)
+    #skl_bls_regs = model_skl_lin_reg.predict(bls)
     
     
     if args.TRANS == "log":
@@ -170,7 +201,7 @@ def main():
         np.savetxt("brls.predicted_train.cnn.log.txt",np.exp(train_bls),fmt='%f')
         np.savetxt("brls.predicted.cnn.reg.log.txt",np.exp(bls_regs),fmt='%f')
         np.savetxt("brls.residues.log.txt",residue,fmt='%f')
-        np.savetxt("brls.predicted.cnn.sklreg.log.txt",skl_bls_regs,fmt='%f')
+        np.savetxt("brls.predicted.cnn.sklreg.log.txt",np.exp(skl_bls_regs),fmt='%f')
         
     elif args.TRANS == "sqrt":
         np.savetxt("brls.evaluated.cnn.sqrt.txt",evals_reg,fmt='%f')
@@ -178,7 +209,7 @@ def main():
         np.savetxt("brls.predicted_train.cnn.sqrt.txt",np.power(train_bls,2),fmt='%f')
         np.savetxt("brls.predicted.cnn.reg.sqrt.txt",np.power(bls_regs,2),fmt='%f')
         np.savetxt("brls.residues.sqrt.txt",residue,fmt='%f')
-        np.savetxt("brls.predicted.cnn.sklreg.sqrt.txt",skl_bls_regs,fmt='%f')
+        np.savetxt("brls.predicted.cnn.sklreg.sqrt.txt",np.power(skl_bls_regs,2),fmt='%f')
     else:
         np.savetxt("brls.evaluated.cnn.txt",evals_reg,fmt='%f')
         np.savetxt("brls.predicted.cnn.txt",bls,fmt='%f')
