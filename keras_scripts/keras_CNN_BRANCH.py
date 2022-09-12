@@ -89,7 +89,7 @@ def build_CNN_brl(X_train,Y_train,conv_pool_n,droput_rates,batch_sizes):
    
     #Model stopping criteria
     callback1=EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=10, verbose=1, mode='auto')
-    #callback2=ModelCheckpoint('best_weights_cnn', monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=False, mode='auto', save_freq='epoch')    
+    callback2=ModelCheckpoint('best_weights_cnn', monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=False, mode='auto', save_freq='epoch')    
 
     tf.keras.utils.plot_model(model_cnn, to_file='model_cnn.png', show_shapes=True)
     
@@ -110,30 +110,7 @@ def linear_regressor(X,Y,batch_sizes):
     
 
 
-def prior(kernel_size, bias_size, dtype=None):
-    n = kernel_size + bias_size
-    prio = Sequential([tfp.layers.VariableLayer(n, dtype=dtype),
-    tfp.layers.DistributionLambda(lambda t: tfd.Independent(tfd.Normal(loc=t, scale=1),reinterpreted_batch_ndims=1))])
-    return prio    
-    
-def posterior(kernel_size, bias_size, dtype=None) -> tf.keras.Model():
-    n = kernel_size + bias_size
-    c = np.log(np.expm1(1.))
-    post = Sequential([tfp.layers.VariableLayer(2 * n, dtype=dtype),
-    tfp.layers.DistributionLambda(lambda t: tfd.Independent(tfd.Normal(loc=t[..., :n],scale=1e-5 + tf.nn.softplus(c + t[..., n:])),reinterpreted_batch_ndims=1))])
-    return post    
-    
-def linear_regressor_bayes(X,Y,batch_sizes):    
-    in_shape = X.shape[1]
-    N_branch = Y.shape[1]
-    model_bayes = Sequential([tfp.layers.DenseVariational(100, activation="relu",input_shape = [in_shape], kl_weight=1/X.shape[0],make_posterior_fn = posterior,make_prior_fn = prior),Dense(100,activation="relu"),Dense(N_branch,activation="linear"),])
-    model_bayes.compile(loss='mean_squared_error',optimizer='adam',metrics=['mae','mse'])
-    model_bayes.fit(x=X,y=Y,batch_size=batch_sizes,epochs=150,verbose=1,shuffle=True,validation_split=0.1)
-    return(model_bayes)
-    
-    
-#yhat = np.concatenate([ss.predict(Xtest,batch_size=100, verbose=1, steps=None) for _ in range(100)],axis = 1)    
-    
+
     
     
     
@@ -201,14 +178,14 @@ def main():
         np.savetxt("brls.predicted.cnn.log.txt",np.exp(bls),fmt='%f')
         np.savetxt("brls.predicted_train.cnn.log.txt",np.exp(train_bls),fmt='%f')
         np.savetxt("brls.predicted.cnn.reg.log.txt",np.exp(bls_regs),fmt='%f')
-        np.savetxt("brls.residues.log.txt",residue,fmt='%f')
+        np.savetxt("brls.residues.cnn.log.txt",residue,fmt='%f')
         
     elif args.TRANS == "sqrt":
         np.savetxt("brls.evaluated.cnn.sqrt.txt",evals_reg,fmt='%f')
         np.savetxt("brls.predicted.cnn.sqrt.txt",np.power(bls,2),fmt='%f')
         np.savetxt("brls.predicted_train.cnn.sqrt.txt",np.power(train_bls,2),fmt='%f')
         np.savetxt("brls.predicted.cnn.reg.sqrt.txt",np.power(bls_regs,2),fmt='%f')
-        np.savetxt("brls.residues.sqrt.txt",residue,fmt='%f')
+        np.savetxt("brls.residues.cnn.sqrt.txt",residue,fmt='%f')
     else:
         np.savetxt("brls.evaluated.cnn.txt",evals_reg,fmt='%f')
         np.savetxt("brls.predicted.cnn.txt",bls,fmt='%f')
@@ -217,7 +194,7 @@ def main():
     #Saving model
     print("\nSaving keras trained model")
     model_cnn_reg.save("model_cnn.h5")
-    tf.keras.utils.plot_model(model_cnn_reg, to_file='model_cnn.png', show_shapes=True)
+
 
     
 if __name__ == "__main__":
