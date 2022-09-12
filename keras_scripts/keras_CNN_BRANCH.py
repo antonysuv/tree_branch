@@ -109,11 +109,6 @@ def linear_regressor(X,Y,batch_sizes):
     return(model_reg)
     
 
-
-
-    
-    
-    
 def main():
     parser = argparse.ArgumentParser(description='Keras run')
     parser.add_argument( '--tr', help = "Training MSAs dataset in npy",nargs='+',dest='TRAIN')
