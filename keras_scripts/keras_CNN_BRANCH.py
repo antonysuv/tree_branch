@@ -60,49 +60,40 @@ def build_CNN_brl(X_train,Y_train,conv_pool_n,droput_rates,batch_sizes):
     conv_x=[Ntaxa,1,1,1,1,1,1,1]
     #Width (vertical)
     conv_y=[1,2,2,2,2,2,2,2]
-    pool=[4,4,4,4,2,2,2,1]
-    filter_s=[1024,1024,128,128,128,128,128,128]
+    pool=[1,4,4,4,2,2,2,1]
+    filter_s=[1024,1024,1024,128,128,128]
 
     print(f"N convolutional layers: {conv_pool_n}\nDropout rate: {droput_rates}\nBatch size: {batch_sizes}")
    
+
     # CNN Arhitecture
-    visible_msa = Input(shape=(Ntaxa,Aln_length))
+    visible_msa = Input(shape=X_train.shape[1:])
     x = visible_msa
-    #for l in list(range(0,conv_pool_n)):
-    #    x = ZeroPadding2D(padding=((0, 0), (0,conv_y[l]-1)))(x)
-    #    x = Conv2D(filters=filter_s[l], kernel_size=(conv_x[l], conv_y[l]), strides=1,activation='relu')(x)
-    #    x = Dropout(rate=droput_rates)(x)
-    #    x = AveragePooling2D(pool_size=(1,pool[l]))(x)
-    #    x = Dropout(rate=droput_rates)(x)
     for l in list(range(0,conv_pool_n)):
-        x = Conv1D(filters=filter_s[l], kernel_size=conv_x[l], strides=1,activation='relu')(x)
+        x = ZeroPadding2D(padding=((0, 0), (0,conv_y[l]-1)))(x)
+        x = Conv2D(filters=filter_s[l], kernel_size=(conv_x[l], conv_y[l]), strides=1,activation='relu')(x)
         x = Dropout(rate=droput_rates)(x)
-        x = AveragePooling2D(pool_size=(1,2))(x)
-        x = Dropout(rate=droput_rates)(x)
-    
-    
-    
-    
+        x = AveragePooling2D(pool_size=(1,pool[l]))(x)
+        x = Dropout(rate=droput_rates)(x)   
     output_msa = Flatten()(x)
 
     
     hidden1 = Dense(1000,activation='relu')(output_msa)
     drop1 = Dropout(rate=droput_rates)(hidden1)
     output = Dense(N_branch, activation='linear')(drop1)
-    
     model_cnn = Model(inputs=visible_msa, outputs=output)
-    model_cnn.compile(loss='mean_squared_error',optimizer='adam',metrics=['mae','mse'])
+    model_cnn.compile(loss='mse',optimizer='adam',metrics=['mae','mse'])
     
     #Print model
     print(model_cnn.summary())
    
     #Model stopping criteria
-    callback1=EarlyStopping(monitor='val_loss', min_delta=0.001, patience=10, verbose=1, mode='auto')
-    callback2=ModelCheckpoint('best_weights_cnn', monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=False, mode='auto', save_freq='epoch')    
+    callback1=EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=10, verbose=1, mode='auto')
+    #callback2=ModelCheckpoint('best_weights_cnn', monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=False, mode='auto', save_freq='epoch')    
 
     tf.keras.utils.plot_model(model_cnn, to_file='model_cnn.png', show_shapes=True)
     
-    model_cnn.fit(x=X_train,y=Y_train,batch_size=batch_sizes,callbacks=[callback1,callback2],epochs=400,verbose=1,shuffle=True,validation_split=0.1)
+    model_cnn.fit(x=X_train,y=Y_train,batch_size=batch_sizes,callbacks=[callback1],epochs=400,verbose=1,shuffle=True,validation_split=0.1)
     return(model_cnn)
 
 def linear_regressor(X,Y,batch_sizes):
@@ -188,7 +179,7 @@ def main():
         
     #Regression BL
     #Run model
-    model_cnn_reg=build_CNN_brl(X_train=X_train,Y_train=Y_train,conv_pool_n=3,droput_rates=0.0,batch_sizes=32)
+    model_cnn_reg=build_CNN_brl(X_train=X_train,Y_train=Y_train,conv_pool_n=6,droput_rates=0.0,batch_sizes=32)
     
     #Evaluate model
     evals_reg = model_cnn_reg.evaluate(X_test,Y_test,batch_size=100, verbose=1, steps=None)
@@ -211,7 +202,6 @@ def main():
         np.savetxt("brls.predicted_train.cnn.log.txt",np.exp(train_bls),fmt='%f')
         np.savetxt("brls.predicted.cnn.reg.log.txt",np.exp(bls_regs),fmt='%f')
         np.savetxt("brls.residues.log.txt",residue,fmt='%f')
-        np.savetxt("brls.predicted.cnn.sklreg.log.txt",np.exp(skl_bls_regs),fmt='%f')
         
     elif args.TRANS == "sqrt":
         np.savetxt("brls.evaluated.cnn.sqrt.txt",evals_reg,fmt='%f')
@@ -219,7 +209,6 @@ def main():
         np.savetxt("brls.predicted_train.cnn.sqrt.txt",np.power(train_bls,2),fmt='%f')
         np.savetxt("brls.predicted.cnn.reg.sqrt.txt",np.power(bls_regs,2),fmt='%f')
         np.savetxt("brls.residues.sqrt.txt",residue,fmt='%f')
-        np.savetxt("brls.predicted.cnn.sklreg.sqrt.txt",np.power(skl_bls_regs,2),fmt='%f')
     else:
         np.savetxt("brls.evaluated.cnn.txt",evals_reg,fmt='%f')
         np.savetxt("brls.predicted.cnn.txt",bls,fmt='%f')
