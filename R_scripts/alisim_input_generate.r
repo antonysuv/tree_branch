@@ -19,11 +19,12 @@ options(scipen = 100000000)
 
 option_list = list(
   make_option(c("-t", "--topo"), type="character", default="((A,B),C);",help="Tree in newick e.g. ((A,B),C); or file", metavar="character"),
-  make_option(c("-n", "--nsim"), type="numeric", default=10, help="Number of simulations", metavar="numeric"),  
+  make_option(c("-n", "--nsim"), type="numeric", default=150000, help="Number of TRAIN simulations", metavar="numeric"),  
   make_option(c("-d", "--distribution"), type="character", default="unif,0,10", help="Branch length distribution", metavar="character"),
-  make_option(c("-l", "--len"), type="numeric", default=100, help="Alignment length", metavar="numeric"),
+  make_option(c("-l", "--len"), type="numeric", default=1000, help="Alignment length", metavar="numeric"),
   make_option(c("-f", "--fname"), type="character", default="simulation", help="File name", metavar="character"),
-  make_option(c("-p", "--prop"), type="numeric", default=0.1, help="Proportion of TRAIN data to generate TEST data", metavar="numeric")  
+  make_option(c("-p", "--ntest"), type="numeric", default=10000, help="Number of TEST simulations", metavar="numeric"),
+  make_option(c("-m", "--mdir"), type="character", default="MODEL", help="Name suffix for the output dir", metavar="character")  
 )
 opt_parser = OptionParser(option_list=option_list)
 opt = parse_args(opt_parser)
@@ -120,7 +121,7 @@ assignInNamespace(".write.tree2", .write.tree2, "ape")
 get_revbayes_in = function(birth_rate,death_rate,root_age,nsim)
 {    
     my_template= paste("
-T <- readTrees(\"input_tree.tre\")[1]
+T <- readTrees(\"../input_tree.tre\")[1]
 taxa <- T.taxa()
 moves = VectorMoves()
 monitors = VectorMonitors()
@@ -144,14 +145,14 @@ q()")
 
 #BL-space generator
 mix_beta=function(nsim)
-    {
+{
       #Set up progress bar
       cat("\nWARNING: This distribution can only be used for unrooted quartet trees.\nThis command may fail if grid cell is empty, in this case re-run the command\n")    
       tree = read.tree(text= "(A,B,(C,D));")
       tree_list=rep(tree,nsim)
       v_select=combn(1:5,2)
       boot=c()
-      space_t=matrix(sample(rbeta(10000000,c(0.1,0.5,1),c(0.1,0.5,1))),ncol=5)
+      space_t=matrix(sample(rbeta(5*10^6,c(0.1,0.5,1),c(0.1,0.5,1))),ncol=5)
       #AS assymetry score (= pairwise distance PD) NB neigbour sum (= sum of neighboring branches NS) + L tree length   
       AS=apply(space_t[,v_select[1,]]-space_t[,v_select[2,]],1,sum)
       LB=2*apply(space_t,1,sum)+apply(space_t[,2:4],1,sum)
@@ -181,10 +182,6 @@ mix_beta=function(nsim)
       }
       close(pb1)
       boot=boot[sample(nrow(boot),nsim),]
-      pdf(file="uniform_sample_from_BL_space.pdf")
-      plot(boot$AS,boot$LB,col=adjustcolor("black", alpha.f = 0.05),pch=16,xlab="PD",ylab = "LNS")
-      dev.off()
-      write.table(data.frame(PD=boot$AS,LNS=boot$LB),"bl_coordinates.txt",row.names=F,quote=F)
       #Assign branch lengths to trees
       cat("\nInitializing the trees\n")
       pb2 = txtProgressBar(min = 0,     
@@ -198,8 +195,8 @@ mix_beta=function(nsim)
         setTxtProgressBar(pb2, i)
       } 
       close(pb2)
-      return(tree_list)
-    }  
+      return(list(tree_list,data.frame(PD=boot$AS,LNS=boot$LB)))
+}  
 
 
 #Simulate branch lengths function
@@ -257,7 +254,7 @@ sim.brls=function(tree,nsim,distr)
         cat("\nStarting RevBayes to simulate BD trees and re-scale their branch lengths with NELSI")
         #Example: bd,5,1,200,0.01 lambda mu root_age clock_rate
         get_revbayes_in(birth_rate = as.numeric(distr[2]),death_rate = as.numeric(distr[3]),root_age=as.numeric(distr[4]),nsim = nsim)
-        system("/Users/anton/Downloads/rb input_revbayes.Rev")
+        system("conda run -n rvb rb input_revbayes.Rev")
         rev_trees = read.tree("revbayes_mcmc.trees")
         rev_trees = rev_trees[2:length(rev_trees)]
         clock_scaled = lapply(rev_trees,simulate.clock,params = list(rate = as.numeric(distr[5]), noise = 0))
@@ -273,13 +270,35 @@ sim.brls=function(tree,nsim,distr)
     if (distr[1] == "mixb")
     {
        #Example: mixb
-       tree_list=mix_beta(nsim) 
+       if (nsim < 50000)
+       {    
+           mix_out=mix_beta(nsim)
+           tree_list = mix_out[[1]] 
+           boot = mix_out[[2]]
+           pdf(file="uniform_sample_from_BL_space.pdf")
+           plot(boot$PD,boot$LNS,col=adjustcolor("black", alpha.f = 0.05),pch=16,xlab="PD",ylab = "LNS")
+           dev.off()
+           write.table(boot,"bl_coordinates.txt",row.names=F,quote=F)
+       }else{
+           tree_list = c()
+           boot = rbind()
+           for (i in 1:(nsim/50000))
+           {
+              mix_out = mix_beta(50000)
+              tree_list = c(tree_list,mix_out[[1]])
+              boot = rbind(boot,mix_out[[2]]) 
+           }    
+           pdf(file="uniform_sample_from_BL_space.pdf")
+           plot(boot$PD,boot$LNS,col=adjustcolor("black", alpha.f = 0.05),pch=16,xlab="PD",ylab = "LNS")
+           dev.off()
+           write.table(boot,"bl_coordinates.txt",row.names=F,quote=F)
+           
+           
     }    
     
-
     return(tree_list)  
+    }
 }
-
 #Generate partition file for IQTREE simulatior 
 get.nexus.part=function(nsim,aln_len,file)
 {
@@ -335,7 +354,7 @@ if (strsplit(opt$topo,split="")[[1]][1] == "(")
 
 n_taxa = length(tree_string$tip.label)
 #Create a directory structure
-main_dir = paste("experiment_",paste(strsplit(opt$distribution,",")[[1]],collapse="_"),"_",n_taxa,"taxa",sep="")
+main_dir = paste("experiment_",paste(strsplit(opt$distribution,",")[[1]],collapse="_"),"_",n_taxa,"taxa","_",opt$mdir,sep="")
 dir.create(main_dir)
 setwd(main_dir)
 #Write tree in newick
@@ -347,7 +366,7 @@ setwd("TEST")
 
 main_gen(nwk_tree = tree_string,
          distr = strsplit(opt$distribution,",")[[1]],
-         nsim = round(opt$nsim*opt$prop),
+         nsim = opt$ntest,
          aln_len = opt$len,
          file = paste("test_",opt$fname,sep=""))
 setwd("..")

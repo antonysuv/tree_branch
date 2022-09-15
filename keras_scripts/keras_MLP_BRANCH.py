@@ -86,7 +86,7 @@ def build_MLP_brl(X_train,Y_train,droput_rates,batch_sizes):
     print(model_mlp.summary())
    
     #Model stopping criteria
-    callback1=EarlyStopping(monitor='val_loss', min_delta=0.001, patience=10, verbose=1, mode='auto')
+    callback1=EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=10, verbose=1, mode='auto')
     callback2=ModelCheckpoint('best_weights_mlp', monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=False, mode='auto', save_freq='epoch')    
     
     tf.keras.utils.plot_model(model_mlp, to_file='model_mlp.png', show_shapes=True)
@@ -102,8 +102,8 @@ def linear_regressor(X,Y,batch_sizes):
     output = Dense(N_branch, activation='linear')(input_vector)
     model_reg = Model(inputs=input_vector, outputs=output)
     model_reg.compile(loss='mean_squared_error',optimizer='adam',metrics=['mae','mse']) 
-    callback1=EarlyStopping(monitor='val_loss', min_delta=0.001, patience=10, verbose=1, mode='auto')
-    callback2=ModelCheckpoint('best_weights_regressor', monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=False, mode='auto', save_freq='epoch')
+    callback1=EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=10, verbose=1, mode='auto')
+    callback2=ModelCheckpoint('best_weights_regressor_mlp', monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=False, mode='auto', save_freq='epoch')
     model_reg.fit(x=X,y=Y,batch_size=batch_sizes,callbacks=[callback1,callback2],epochs=400,verbose=1,shuffle=True,validation_split=0.1)
     return(model_reg)
 
