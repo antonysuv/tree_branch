@@ -117,6 +117,14 @@ set.seed(my_seed)
 assignInNamespace(".write.tree2", .write.tree2, "ape")
 
 
+net_div = function(n_sp,t_crown,epsilon)
+{
+    r_d = log(((n*(1-epsilon^2))/2)+(2*epsilon)+(1-epsilon)*sqrt())
+}    
+
+
+
+
 #RevBayes template generate
 get_revbayes_in = function(birth_rate,death_rate,root_age,nsim)
 {    
