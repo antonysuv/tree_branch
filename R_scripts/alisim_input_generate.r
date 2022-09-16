@@ -117,9 +117,12 @@ set.seed(my_seed)
 assignInNamespace(".write.tree2", .write.tree2, "ape")
 
 
-net_div = function(n_sp,t_crown,epsilon)
+net_div = function(n_sp,root_age,epsilon)
 {
-    r_d = log(((n*(1-epsilon^2))/2)+(2*epsilon)+(1-epsilon)*sqrt())
+    r = (log(((n_sp*(1-epsilon^2))/2)+(2*epsilon)+((1-epsilon)*sqrt(n_sp*(n_sp*epsilon^2+8*epsilon+2*n_sp*epsilon+n_sp)))/2)-log(2))/root_age
+    lambda = r/(1 - epsilon)
+    mu = lambda - r
+    return(c(lambda,mu))
 }    
 
 
@@ -260,14 +263,16 @@ sim.brls=function(tree,nsim,distr)
     if (distr[1] == "bd")
     {
         cat("\nStarting RevBayes to simulate BD trees and re-scale their branch lengths with NELSI")
-        #Example: bd,5,1,200,0.01 lambda mu root_age clock_rate
-        get_revbayes_in(birth_rate = as.numeric(distr[2]),death_rate = as.numeric(distr[3]),root_age=as.numeric(distr[4]),nsim = nsim)
+        #Example: bd,0.1,200,0.01 mu/lambda root_age clock_rate
+        n_sp = length(tree$tip.label)
+        lambda_mu = net_div(n_sp = n_sp,root_age = as.numeric(distr[3]),epsilon = as.numeric(distr[2])) 
+        get_revbayes_in(birth_rate = lambda_mu[1],death_rate = lambda_mu[2],root_age=as.numeric(distr[3]),nsim = nsim)
         system("conda run -n rvb rb input_revbayes.Rev")
         rev_trees = read.tree("revbayes_mcmc.trees")
         rev_trees = rev_trees[2:length(rev_trees)]
-        clock_scaled = lapply(rev_trees,simulate.clock,params = list(rate = as.numeric(distr[5]), noise = 0))
+        clock_scaled = lapply(rev_trees,simulate.clock,params = list(rate = as.numeric(distr[4]), noise = 0))
         #Dummy list 
-        clock_scaled_unlisted = (unlist(lapply(clock_scaled,"[",1),recursive = F,use.names = F))
+        clock_scaled_unlisted = unlist(lapply(clock_scaled,"[",1),recursive = F,use.names = F)
         tree_list=read.tree(text="(Dummy1,Dummy2);")
         tree_list=c(tree_list,tree_list)
         for (i in 1:length(clock_scaled))
@@ -300,12 +305,10 @@ sim.brls=function(tree,nsim,distr)
            plot(boot$PD,boot$LNS,col=adjustcolor("black", alpha.f = 0.05),pch=16,xlab="PD",ylab = "LNS")
            dev.off()
            write.table(boot,"bl_coordinates.txt",row.names=F,quote=F)
-           
-           
-    }    
+           }    
     
-    return(tree_list)  
     }
+    return(tree_list)
 }
 #Generate partition file for IQTREE simulatior 
 get.nexus.part=function(nsim,aln_len,file)
