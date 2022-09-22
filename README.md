@@ -69,6 +69,26 @@ python3.9 keras_CNNVI_BRANCH.py --tr TRAIN.npy --te TEST.npy --trl train_trees.u
 
 
 # AliSim input simulation commands
+
+### BL-space
+```
+alisim_input_generate.r -d mixb -t '(A,B,(C,D));' 
+```
+
+
+### Birth-death model 
+```
+alisim_input_generate.r -d bd,mu/lambda,root_age,clock_rate -t '((A,B),(C,D));'
+```
+| mu/lambda | root age | clock rate |
+| --- | :---: | :---: | 
+| 200 | 0, 0.5, 0.9 | 0.1 | 
+| 100 | 0, 0.5, 0.9 | 0.1 |
+| 50 | 0, 0.5, 0.9 | 0.1 |
+| 10 | 0, 0.5, 0.9 | 0.1 |
+
+
+
 ### Network generalization in MPHATE (JC) 
 ```
 alisim_input_generate.r -d exp,10 -l 1000 -t '(A,B,(C,D));' -n 150000
@@ -77,7 +97,7 @@ alisim_input_generate.r -d exp,10 -l 1000 -t '(A,B,(C,D));' -n 150000
 ### BL space
 #### 1000 sites (JC and GTR)
 ```
-alisim_input_generate.r -d mixb -l 1000 -t '(A,B,(C,D));' -n 150000 -p 1
+alisim_input_generate.r -d mixb -t '(A,B,(C,D));' 
 ```
 
 #### 5000 sites (JC)
