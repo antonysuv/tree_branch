@@ -74,38 +74,42 @@ python3.9 keras_CNNVI_BRANCH.py --tr TRAIN.npy --te TEST.npy --trl train_trees.u
 ```
 alisim_input_generate.r -d unif,a,b -t '(A,B,(C,D));'
 ```
-| a | b | 
-| --- | :---: | 
-| 0 | 0.001 | 
-| 0.001 | 0.1 |
-| 0.1 | 1 | 
-| 1 | 10| 
+| a | b | model |
+| --- | :---: | :---: | 
+| 0 | 0.001 | JC | 
+| 0.001 | 0.1 | JC |
+| 0.1 | 1 | JC | 
+| 1 | 10 | JC | 
 
 ### BL-space
 ```
 alisim_input_generate.r -d mixb -t '(A,B,(C,D));' 
 ```
+| model |
+| --- | 
+| JC, GTR |
+
 ### Exponential model
 ```
 alisim_input_generate.r -d exp,theta -t '(A,B,(C,D));'
 ```
-| theta |
-| --- |
-| 1 |  
-| 10 |
-| 100 | 
+| theta | model | 
+| --- | :---: |
+| 1 | JC, GTR |   
+| 10 | JC, GTR | 
+| 100 | JC, GTR |  
 
 
 ### Birth-death model 
 ```
 alisim_input_generate.r -d bd,mu/lambda,root_age,clock_rate -t '((A,B),(C,D));'
 ```
-| root age | mu/lambda | clock rate |
-| --- | :---: | :---: | 
-| 200 | 0, 0.5, 0.9 | 0.001 | 
-| 100 | 0, 0.5, 0.9 | 0.001 |
-| 50 | 0, 0.5, 0.9 | 0.001 |
-| 10 | 0, 0.5, 0.9 | 0.001 |
+| root age | mu/lambda | clock rate | model |
+| --- | :---: | :---: | :---: | 
+| 200 | 0, 0.5, 0.9 | 0.001 | 3.3b, UNREST |  
+| 100 | 0, 0.5, 0.9 | 0.001 | 3.3b, UNREST |
+| 50 | 0, 0.5, 0.9 | 0.001 | 3.3b, UNREST |
+| 10 | 0, 0.5, 0.9 | 0.001 | 3.3b, UNREST |
 
 
 
