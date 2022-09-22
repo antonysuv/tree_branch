@@ -70,22 +70,42 @@ python3.9 keras_CNNVI_BRANCH.py --tr TRAIN.npy --te TEST.npy --trl train_trees.u
 
 # AliSim input simulation commands
 
+### Uniform model 
+```
+alisim_input_generate.r -d unif,a,b -t '(A,B,(C,D));'
+```
+| a | b | 
+| --- | :---: | 
+| 0 | 0.001 | 
+| 0.001 | 0.1 |
+| 0.1 | 1 | 
+| 1 | 10| 
+
 ### BL-space
 ```
 alisim_input_generate.r -d mixb -t '(A,B,(C,D));' 
 ```
+### Exponential model
+```
+alisim_input_generate.r -d exp,theta -t '(A,B,(C,D));'
+```
+| theta |
+| --- |
+| 1 |  
+| 10 |
+| 100 | 
 
 
 ### Birth-death model 
 ```
 alisim_input_generate.r -d bd,mu/lambda,root_age,clock_rate -t '((A,B),(C,D));'
 ```
-| mu/lambda | root age | clock rate |
+| root age | mu/lambda | clock rate |
 | --- | :---: | :---: | 
-| 200 | 0, 0.5, 0.9 | 0.1 | 
-| 100 | 0, 0.5, 0.9 | 0.1 |
-| 50 | 0, 0.5, 0.9 | 0.1 |
-| 10 | 0, 0.5, 0.9 | 0.1 |
+| 200 | 0, 0.5, 0.9 | 0.001 | 
+| 100 | 0, 0.5, 0.9 | 0.001 |
+| 50 | 0, 0.5, 0.9 | 0.001 |
+| 10 | 0, 0.5, 0.9 | 0.001 |
 
 
 
