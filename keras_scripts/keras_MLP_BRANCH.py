@@ -1,12 +1,9 @@
+#!/usr/bin/env python
 import tensorflow as tf
 import time
-#import pandas
-from itertools import product
 import sys, argparse, os
 import numpy as np
-from math import log, ceil
-#from scipy.stats import multinomial, chi2, bayes_mvs
-from math import factorial
+from itertools import product
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.layers import Input, Dense, Flatten, Dropout, BatchNormalization, ZeroPadding2D
 from tensorflow.keras.layers import Conv2D

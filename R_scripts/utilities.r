@@ -70,11 +70,11 @@ get_cor = function(t1,t2)
     maes = paste("\nMAE =",round(tapply(pl$aer,pl$br_id,mean),6))
     mses_labels = paste(c(rep("Branch",length(mses)-1),"Tree length"),c(as.character(1:(length(mses)-1)),""),":",mses,maes)
     pl_g = ggscatter(pl, x = "estimated_brl", y = "true_brl",
-          #add = "reg.line",                                 # Add regression line
+          add = "reg.line",                                 # Add regression line
           conf.int = TRUE,                                  # Add confidence interval
           size = 0.5,
-          xlim=c(0,1.5),
-          ylim=c(0,1.5),
+          xlim=c(0,0.2),
+          ylim=c(0,0.2),
           add.params = list(color = "blue",
                             fill = "lightgray")
                             )+

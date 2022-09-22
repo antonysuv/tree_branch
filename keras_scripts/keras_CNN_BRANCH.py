@@ -1,12 +1,8 @@
 #!/usr/bin/env python
 import tensorflow as tf
 import time
-#import pandas
-from itertools import product
 import sys, argparse, os
 import numpy as np
-from math import log, ceil
-#from scipy.stats import multinomial, chi2, bayes_mvs
 from math import factorial
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.layers import Input, Dense, Flatten, Dropout, BatchNormalization, ZeroPadding2D, Activation
@@ -16,8 +12,8 @@ from tensorflow.keras.layers import concatenate
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.regularizers import L1, L2, L1L2
-import tensorflow_probability as tfp
-tfd = tfp.distributions
+#import tensorflow_probability as tfp
+#tfd = tfp.distributions
 #from sklearn.linear_model import LinearRegression
 #Set seed
 seed = np.random.randint(0,2**32 - 1,1)
@@ -104,7 +100,7 @@ def linear_regressor(X,Y,batch_sizes):
     model_reg = Model(inputs=input_vector, outputs=output)
     model_reg.compile(loss='mean_squared_error',optimizer='adam',metrics=['mae','mse']) 
     callback1=EarlyStopping(monitor='val_loss', min_delta=0.0001, patience=10, verbose=1, mode='auto')
-    callback2=ModelCheckpoint('best_weights_regressor', monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=False, mode='auto', save_freq='epoch')
+    callback2=ModelCheckpoint('best_weights_regressor_cnn', monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=False, mode='auto', save_freq='epoch')
     model_reg.fit(x=X,y=Y,batch_size=batch_sizes,callbacks=[callback1,callback2],epochs=400,verbose=1,shuffle=True,validation_split=0.1)
     return(model_reg)
     
@@ -194,26 +190,3 @@ def main():
     
 if __name__ == "__main__":
     main()
-    
-    
-#>>> Y=np.loadtxt("TRAIN/train_simulation.Y.txt")
-#>>> reg = LinearRegression().fit(X, Y)
-#>>> Y_test=np.loadtxt("brls.predicted.cnn.sqrt.txt")
-#>>> Y_pred=reg.predict(Y_test)
-#>>> Y_pred
-#array([[0.00878666, 0.13610668, 0.02070595, 0.01234062, 0.44912966],
-#       [0.03698093, 0.14901558, 0.05012861, 0.00838746, 0.2196047 ],
-#       [0.11163307, 0.0227381 , 0.14510193, 0.02379626, 0.01955986],
-#       ...,
-#       [0.07047637, 0.25677057, 0.09077911, 0.07218845, 0.00818935],
-#       [0.39680439, 0.24323332, 0.10637658, 0.08910074, 0.0767236 ],
-#       [0.02427156, 0.01822422, 0.1709172 , 0.01000285, 0.00202082]])
-#>>> np.savetxt(""brls.predicted.reg.txt",Y_pred,fmt='%f')
-#  File "<stdin>", line 1
-#    np.savetxt(""brls.predicted.reg.txt",Y_pred,fmt='%f')
-#                                       ^
-##SyntaxError: unterminated string literal (detected at line 1)
-#>>> np.savetxt("brls.predicted.reg.txt",Y_pred,fmt='%f')
-#>>> reg = LinearRegression().fit(np.sqrt(X), np.sqrt(Y))
-#>>> Y_pred=reg.predict(np.sqrt(Y_test))
-#>>> np.savetxt("brls.predicted.reg_power.txt",np.power(Y_pred,2),fmt='%f')    
