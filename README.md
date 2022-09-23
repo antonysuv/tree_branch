@@ -14,25 +14,26 @@ Options:
 		Tree in newick e.g. ((A,B),C); or file
 
 	-n NUMERIC, --nsim=NUMERIC
-		Number of TRAIN simulations
+		Number of TRAIN simulations (default: 150000)
 
 	-d CHARACTER, --distribution=CHARACTER
-		Branch length distribution
+		Branch length distribution (unif,exp,mixb,bd,dir)
 
 	-l NUMERIC, --len=NUMERIC
-		Alignment length
+		Alignment length for IQTREE partiton file (default: 1000)
 
 	-f CHARACTER, --fname=CHARACTER
-		File name
+		Name prefix for main file outputs (default: simulation)
 
 	-p NUMERIC, --ntest=NUMERIC
-		Number of TEST simulations
+		Number of TEST simulations (default: 10000)
 
 	-m CHARACTER, --mdir=CHARACTER
-		Name suffix for the output dir
+		Name suffix for the output dir (default: MODEL)
 
 	-h, --help
 		Show this help message and exit
+
 ```
 ### 2) Generate multiple sequence alignment (MSA) for each tree with branch lengths 
 ```
