@@ -6,7 +6,7 @@ Multilayer perceptron | Convolutional neural network
 ## Pipeline overview 
 ### 1) Generate newick trees with branch lengths  
 ```
-alisim_input_generate.r -d exp,10 -l 1000 -t '((A,B),(C,D));' -n 50000 
+alisim_input_generate.r -d bd,0.9,200,0.001 -t '((A,B),(C,D));' -m 33b 
 ```
 ```
 Options:
@@ -14,21 +14,24 @@ Options:
 		Tree in newick e.g. ((A,B),C); or file
 
 	-n NUMERIC, --nsim=NUMERIC
-		Number of simulations
+		Number of TRAIN simulations
 
 	-d CHARACTER, --distribution=CHARACTER
-		Distribution
+		Branch length distribution
 
 	-l NUMERIC, --len=NUMERIC
 		Alignment length
 
 	-f CHARACTER, --fname=CHARACTER
 		File name
-	
-    -p NUMERIC, --prop=NUMERIC
-		Proportion of TRAIN data to generate TEST data
-	
-    -h, --help
+
+	-p NUMERIC, --ntest=NUMERIC
+		Number of TEST simulations
+
+	-m CHARACTER, --mdir=CHARACTER
+		Name suffix for the output dir
+
+	-h, --help
 		Show this help message and exit
 ```
 ### 2) Generate multiple sequence alignment (MSA) for each tree with branch lengths 
