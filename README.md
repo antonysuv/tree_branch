@@ -77,11 +77,12 @@ alisim_input_generate.r -d unif,a,b -t '(A,B,(C,D));'
 | a | b | model |
 | --- | :---: | :---: | 
 | 0 | 0.001 | JC | 
-| 0.001 | 0.1 | JC |
+| 0.001 | 0.01 | JC |
+| 0.01 | 0.1 | JC |
 | 0.1 | 1 | JC | 
 | 1 | 10 | JC | 
 
-### BL-space
+### Branch length heterogeneity (BL-space) model
 ```
 alisim_input_generate.r -d mixb -t '(A,B,(C,D));' 
 ```
