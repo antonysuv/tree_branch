@@ -19,12 +19,12 @@ options(scipen = 100000000)
 
 option_list = list(
   make_option(c("-t", "--topo"), type="character", default="((A,B),C);",help="Tree in newick e.g. ((A,B),C); or file", metavar="character"),
-  make_option(c("-n", "--nsim"), type="numeric", default=150000, help="Number of TRAIN simulations", metavar="numeric"),  
-  make_option(c("-d", "--distribution"), type="character", default="unif,0,10", help="Branch length distribution", metavar="character"),
-  make_option(c("-l", "--len"), type="numeric", default=1000, help="Alignment length", metavar="numeric"),
-  make_option(c("-f", "--fname"), type="character", default="simulation", help="File name", metavar="character"),
-  make_option(c("-p", "--ntest"), type="numeric", default=10000, help="Number of TEST simulations", metavar="numeric"),
-  make_option(c("-m", "--mdir"), type="character", default="MODEL", help="Name suffix for the output dir", metavar="character")  
+  make_option(c("-n", "--nsim"), type="numeric", default=150000, help="Number of TRAIN simulations (default: 150000)", metavar="numeric"),  
+  make_option(c("-d", "--distribution"), type="character", default="unif,0,10", help="Branch length distribution (unif,exp,mixb,bd,dir)", metavar="character"),
+  make_option(c("-l", "--len"), type="numeric", default=1000, help="Alignment length for IQTREE partiton file (default: 1000)", metavar="numeric"),
+  make_option(c("-f", "--fname"), type="character", default="simulation", help="Name prefix for main file outputs (default: simulation)", metavar="character"),
+  make_option(c("-p", "--ntest"), type="numeric", default=10000, help="Number of TEST simulations (default: 10000)", metavar="numeric"),
+  make_option(c("-m", "--mdir"), type="character", default="MODEL", help="Name suffix for the output dir (default: MODEL)", metavar="character")  
 )
 opt_parser = OptionParser(option_list=option_list)
 opt = parse_args(opt_parser)
