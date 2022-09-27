@@ -107,14 +107,30 @@ alisim_input_generate.r -d exp,theta -t '(A,B,(C,D));'
 
 ### Birth-death model 
 ```
-alisim_input_generate.r -d bd,mu/lambda,root_age,clock_rate -t '((A,B),(C,D));'
+alisim_input_generate.r -d bd,turnover,root_age,clock_rate -t '((A,B),(C,D));'
 ```
-| root age | mu/lambda | clock rate | model |
+| root age | turnover(mu/lambda) | clock rate | model |
 | --- | :---: | :---: | :---: | 
 | 200 | 0, 0.5, 0.9 | 0.001 | 3.3b, UNREST |  
 | 100 | 0, 0.5, 0.9 | 0.001 | 3.3b, UNREST |
 | 50 | 0, 0.5, 0.9 | 0.001 | 3.3b, UNREST |
 | 10 | 0, 0.5, 0.9 | 0.001 | 3.3b, UNREST |
+
+
+### Tree shape effect 
+```
+alisim_input_generate.r -d exp,10 -t topology
+```
+| tree | model | comment |
+| --- | :---: | :---: |
+| (A,B,((C,D),((E,F),(G,H)))); | GTR | balanced | 
+| (A,B,(C,(D,((E,F),(G,H))))); | GTR | unbalanced |
+
+| (A,B,(C,(D,(E,(F,(G,H)))))); | GTR | unbalanced |
+
+
+
+
 
 
 
