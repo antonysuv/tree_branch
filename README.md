@@ -121,7 +121,7 @@ alisim_input_generate.r -d bd,turnover,root_age,clock_rate -t '((A,B),(C,D));'
 ```
 alisim_input_generate.r -d exp,10 -t topology
 ```
-| tree | model | comment |
+| topology | model | comment |
 | --- | :---: | :---: |
 | (A,B,((C,D),((E,F),(G,H)))); | GTR | balanced | 
 | (A,B,(C,(D,((E,F),(G,H))))); | GTR | unbalanced |
