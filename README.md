@@ -125,7 +125,7 @@ alisim_input_generate.r -d exp,10 -t topology
 | --- | :---: | :---: |
 | (A,B,((C,D),((E,F),(G,H)))); | GTR | balanced | 
 | (A,B,(C,(D,((E,F),(G,H))))); | GTR | unbalanced |
-
+| (A,B,((C,D),(E,(F,(G,H))))); | GTR | unbalanced |
 | (A,B,(C,(D,(E,(F,(G,H)))))); | GTR | unbalanced |
 
 
