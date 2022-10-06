@@ -28,8 +28,8 @@ for tr in `seq -f '%06g' $start $stop`
 do
 myrand=$((`shuf -i 0-4294967295 -n1`))
 file=in_tree_$tr.tre 
-~/soft/iqtree-2.2.0-Linux/bin/iqtree2 --alisim alignment_$tr -m JC+G4{uniform} -t $file --length '$len' -af fasta -seed $myrand
-~/soft/iqtree-2.2.0-Linux/bin/iqtree2 -s alignment_$tr.fa -t fixed_tree.tre -m GTR+G4 -blmin 1e-300 -quiet -pre brls_$tr -safe -redo --tree-fix
+~/soft/iqtree-2.2.0-Linux/bin/iqtree2 --alisim alignment_$tr --seqtype DNA -m 3.3b+G4{uniform} -t $file --length '$len' -af fasta -seed $myrand
+~/soft/iqtree-2.2.0-Linux/bin/iqtree2 -s alignment_$tr.fa -t fixed_tree.tre --seqtype DNA -m 3.3b+G4 -blmin 1e-300 -quiet -pre brls_$tr -safe -redo --tree-fix
 rm brls_$tr.ckp.gz brls_$tr.iqtree brls_$tr.log $file
 done
 
@@ -44,4 +44,3 @@ rm brls_$tr.treefile
 done
 date' >> $batch
 sbatch $batch
-
