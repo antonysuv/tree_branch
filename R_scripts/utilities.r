@@ -73,8 +73,8 @@ get_cor = function(t1,t2)
           add = "reg.line",                                 # Add regression line
           conf.int = TRUE,                                  # Add confidence interval
           size = 0.5,
-          xlim=c(0,0.2),
-          ylim=c(0,0.2),
+          #xlim=c(0,0.2),
+          #ylim=c(0,0.2),
           add.params = list(color = "blue",
                             fill = "lightgray")
                             )+
@@ -132,7 +132,7 @@ get_viol = function(t1,t2)
 {    
     pl = data_prep(t1,t2)
     pl_m = melt(pl)
-    pl_g = ggviolin(pl_m, x = "variable", y = "value", color = "variable",add = "boxplot",palette = c("black","orange"),add.params = list(fill = "white"),ylim=c(0,10))+
+    pl_g = ggviolin(pl_m, x = "variable", y = "value", color = "variable",add = "boxplot",palette = c("black","orange"),add.params = list(fill = "white"),ylim=c(0,1))+
     stat_compare_means(aes(label = paste0("p = ", ..p.format..)))
     pl_g = facet(pl_g,facet.by = "br_id",scales = "free",ncol = 4) 
     return(pl_g)
