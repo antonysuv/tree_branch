@@ -89,7 +89,7 @@ def build_CNN_brl(X_train,Y_train,conv_pool_n,droput_rates,batch_sizes):
 
     tf.keras.utils.plot_model(model_cnn, to_file='model_cnn.png', show_shapes=True)
     
-    model_cnn.fit(x=X_train,y=Y_train,batch_size=batch_sizes,callbacks=[callback1],epochs=400,verbose=1,shuffle=True,validation_split=0.1)
+    model_cnn.fit(x=X_train,y=Y_train,batch_size=batch_sizes,callbacks=[callback1],epochs=100,verbose=1,shuffle=True,validation_split=0.1)
     return(model_cnn)
 
 def linear_regressor(X,Y,batch_sizes):
