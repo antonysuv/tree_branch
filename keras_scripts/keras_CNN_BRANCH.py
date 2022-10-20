@@ -150,9 +150,9 @@ def main():
     model_cnn_reg=build_CNN_brl(X_train=X_train,Y_train=Y_train,conv_pool_n=6,droput_rates=0.0,batch_sizes=32)
     
     #Evaluate model
-    evals_reg = model_cnn_reg.evaluate(X_test,Y_test,batch_size=100, verbose=1, steps=None)
-    bls = model_cnn_reg.predict(X_test,batch_size=100, verbose=1, steps=None)
-    train_bls = model_cnn_reg.predict(X_train,batch_size=100, verbose=1, steps=None)
+    evals_reg = model_cnn_reg.evaluate(X_test,Y_test,batch_size=32, verbose=1, steps=None)
+    bls = model_cnn_reg.predict(X_test,batch_size=32, verbose=1, steps=None)
+    train_bls = model_cnn_reg.predict(X_train,batch_size=32, verbose=1, steps=None)
     
     print("\n==========Starting ROE==========")
     #Regression of observed on estimated values (ROE) for bias correction

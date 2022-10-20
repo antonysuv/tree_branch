@@ -65,7 +65,24 @@ data_prep=function(t1,t2,cl_out = FALSE,filename = "hist_bls.pdf" )
     t2 = melt(t2)
     t1_t2 = data.frame(br_id = t1$variable, estimated_brl = t1$value, true_brl = t2$value)
     return(t1_t2)    
+}
+
+# t1 = table after data-prep formatting 
+cor_test = function(t1)
+{
+    my_stats=c()
+    for (i in names(table(t1$br_id)))
+    {
+        sub_t1 = t1[t1$br_id==i,c("estimated_brl","true_brl")]
+        my_test = cor.test(sub_t1[,1],(sub_t1[,2]), method = "spearman")
+        my_values = paste(round(my_test$estimate,3)," (",my_test$p.value,")",sep="")
+        my_stats=c(my_stats,my_values)
+    }
+    return(my_stats)
 }    
+
+
+
 
 # t1 = estimated, t2 = true 
 get_hist = function(t1,t2,cl_out = FALSE,filename = "hist_bls.pdf")
