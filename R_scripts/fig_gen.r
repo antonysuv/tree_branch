@@ -6,9 +6,12 @@ library("optparse")
 
 option_list = list(
   make_option(c("-m", "--ml"), type="character", default="TEST/ML_all.tre",help="path to ML branch lengths", metavar="character"),
-  make_option(c("-c", "--cnn"), type="character", default="brls.predicted.cnn.sqrt.txt", help="path to CNN branch lengths", metavar="character"),  
+  make_option(c("-c", "--cnn"), type="character", default="brls.predicted.cnn.reg.sqrt.txt", help="path to CNN branch lengths", metavar="character"),  
   make_option(c("-p", "--mlp"), type="character", default="brls.predicted.mlp.reg.sqrt.txt", help="path to MLP branch lengths", metavar="character"),
-  make_option(c("-t", "--truebl"), type="character", default="TEST/test_simulation.Y.txt", help="path to true branch lengths",metavar="character") 
+  make_option(c("-s", "--cnn_noreg"), type="character", default="brls.predicted.cnn.sqrt.txt", help="path to CNN branch lengths", metavar="character"),  
+  make_option(c("-r", "--mlp_noreg"), type="character", default="brls.predicted.mlp.sqrt.txt ", help="path to MLP branch lengths", metavar="character"),
+  make_option(c("-t", "--truebl"), type="character", default="TEST/test_simulation.Y.txt", help="path to true branch lengths",metavar="character"),
+  make_option(c("-d", "--dir"), type="character", default="plots_all", help="create directory for outputs",metavar="character")  
 )  
 
 opt_parser = OptionParser(option_list=option_list)
@@ -86,9 +89,7 @@ get_cor = function(t1,t2,cl_out = FALSE,filename = "dot_bls.pdf")
     mses = paste("MSE =",round(tapply(pl$er,pl$br_id,mean),6))
     maes = paste("\nMAE =",round(tapply(pl$aer,pl$br_id,mean),6))
     mses_labels = paste(c(rep("Branch",length(mses)-1),"Tree length"),c(as.character(1:(length(mses)-1)),""),":",mses,maes)
-    pl_g = ggscatter(pl, x = "estimated_brl", y = "true_brl",
-          add = "reg.line",                                 # Add regression line
-          conf.int = TRUE,                                  # Add confidence interval
+    pl_g = ggscatter(pl, x = "estimated_brl", y = "true_brl",                      
           size = 0.5,
           #xlim=c(0,0.2),
           #ylim=c(0,0.2),
@@ -103,24 +104,35 @@ get_cor = function(t1,t2,cl_out = FALSE,filename = "dot_bls.pdf")
   ggsave(plot = pl_g, width = 15, height = 15, dpi = 300, filename = filename)
 }
 
+dir.create(opt$dir)
+
 tt=read.table(opt$truebl)  
 ml = bls_extract(opt$ml) 
 cnn = read.table(opt$cnn)
 mlp = read.table(opt$mlp)
+mlp_noreg = read.table(opt$mlp_noreg)
+cnn_noreg = read.table(opt$cnn_noreg)
 
+get_cor(ml,tt,filename = paste(opt$dir,"/","plot_ml_dot_raw.pdf",sep=""))
+get_cor(cnn,tt,filename =  paste(opt$dir,"/","plot_cnn_dot_raw.pdf",sep=""))
+get_cor(mlp,tt,filename =  paste(opt$dir,"/","plot_mlp_dot_raw.pdf",sep=""))
+get_cor(cnn_noreg,tt,filename =  paste(opt$dir,"/","plot_cnn_noreg_dot_raw.pdf",sep=""))
+get_cor(mlp_npreg,tt,filename =  paste(opt$dir,"/","plot_mlp_noreg_dot_raw.pdf",sep=""))
 
-get_cor(ml,tt,filename = "plot_ml_dot_raw.pdf")
-get_cor(cnn,tt,filename = "plot_cnn_dot_raw.pdf")
-get_cor(mlp,tt,filename = "plot_mlp_dot_raw.pdf")
+get_hist(ml,tt,filename =  paste(opt$dir,"/","plot_ml_hist_raw.pdf",sep=""))
+get_hist(cnn,tt,filename =  paste(opt$dir,"/","plot_cnn_hist_raw.pdf",sep=""))
+get_hist(mlp,tt,filename =  paste(opt$dir,"/","plot_mlp_hist_raw.pdf",sep=""))
+get_hist(cnn_noreg,tt,filename =  paste(opt$dir,"/","plot_cnn_hist_noreg_raw.pdf",sep=""))
+get_hist(mlp_npreg,tt,filename =  paste(opt$dir,"/","plot_mlp_hist_noreg_raw.pdf",sep=""))
 
-get_hist(ml,tt,filename = "plot_ml_hist_raw.pdf")
-get_hist(cnn,tt,filename = "plot_cnn_hist_raw.pdf" )
-get_hist(mlp,tt,filename = "plot_mlp_hist_raw.pdf")
+get_cor(ml,tt,cl_out = TRUE,filename =  paste(opt$dir,"/","plot_ml_dot_clean.pdf",sep=""))
+get_cor(cnn,tt,cl_out = TRUE,filename =  paste(opt$dir,"/","plot_cnn_dot_clean.pdf",sep=""))
+get_cor(mlp,tt,cl_out = TRUE,filename =  paste(opt$dir,"/","plot_mlp_dot_clean.pdf",sep=""))
+get_cor(cnn_noreg,tt,cl_out = TRUE,filename =  paste(opt$dir,"/","plot_cnn_noreg_dot_clean.pdf",sep=""))
+get_cor(mlp_noreg,tt,cl_out = TRUE,filename =  paste(opt$dir,"/","plot_mlp_noreg_dot_clean.pdf",sep=""))
 
-get_cor(ml,tt,cl_out = TRUE,filename = "plot_ml_dot_clean.pdf")
-get_cor(cnn,tt,cl_out = TRUE,filename = "plot_cnn_dot_clean.pdf")
-get_cor(mlp,tt,cl_out = TRUE,filename = "plot_mlp_dot_clean.pdf")
-
-get_hist(ml,tt,cl_out = TRUE,filename = "plot_ml_hist_clean.pdf")
-get_hist(cnn,tt,cl_out = TRUE,filename = "plot_cnn_hist_clean.pdf" )
-get_hist(mlp,tt,cl_out = TRUE,filename = "plot_mlp_hist_clean.pdf")
+get_hist(ml,tt,cl_out = TRUE,filename =  paste(opt$dir,"/","plot_ml_hist_clean.pdf",sep=""))
+get_hist(cnn,tt,cl_out = TRUE,filename =  paste(opt$dir,"/","plot_cnn_hist_clean.pdf",sep=""))
+get_hist(mlp,tt,cl_out = TRUE,filename =  paste(opt$dir,"/","plot_mlp_hist_clean.pdf",sep=""))
+get_hist(cnn_noreg,tt,cl_out = TRUE,filename =  paste(opt$dir,"/","plot_cnn_hist_noreg_clean.pdf",sep=""))
+get_hist(mlp_noreg,tt,cl_out = TRUE,filename =  paste(opt$dir,"/","plot_mlp_hist_noreg_clean.pdf",sep=""))
