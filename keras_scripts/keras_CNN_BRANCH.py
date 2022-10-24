@@ -156,7 +156,7 @@ def main():
     
     print("\n==========Starting ROE==========")
     #Regression of observed on estimated values (ROE) for bias correction
-    model_lin_reg = linear_regressor(X=train_bls,Y=Y_train,batch_sizes=32)
+    model_lin_reg = linear_regressor(X=train_bls,Y=Y_train,batch_sizes=100)
     train_bls_reg = model_lin_reg.predict(train_bls,batch_size=100, verbose=1, steps=None)
     residue = Y_train - train_bls_reg
     bls_regs = model_lin_reg.predict(bls,batch_size=100, verbose=1, steps=None)
