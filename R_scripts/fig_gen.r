@@ -84,14 +84,14 @@ cor_test = function(t1,methodname)
         my_mse = mean(d^2)
         my_mae = mean(abs(d))
         my_test = cor.test(sub_t1[,1],(sub_t1[,2]), method = "spearman",exact=FALSE)
-        my_values = paste(round(my_mse,6)," ",
-                          round(my_mae,6)," ",
+        my_values = c(round(my_mse,6),
+                          round(my_mae,6),
                           round(my_test$estimate,3),
-                          " (",round(my_test$p.value,6),")"," ",
-                          round(my_cdfbias,4)," ",
+                          round(my_test$p.value,6),
+                          round(my_cdfbias,4),
                           my_ks$statistic,
-                           " (",round(my_ks$p.value,6),")",
-                          sep="")
+                          round(my_ks$p.value,6)
+                          )
         my_stats = c(my_stats,my_values)
     }
     return(c(methodname,my_stats))
@@ -160,7 +160,15 @@ dd = data.frame(rbind(cor_test(d_cnn_noreg,"CNN"),
                     cor_test(d_mlp,"MLP-ROE"),
                     cor_test(d_ml,"ML")
                    ))
-names(dd)=c("Method",paste("Branch",1:(ncol(dd)-2),sep="_"),"Tree_length")
+
+data.frame(t(tt))
+
+
+test_stats = c(" ",rep(c("MSE","MAE","Rho","P_Rho","Bias","D","P_D"),(ncol(dd)-1)/7))
+test_stats = data.frame(t(data.frame(test_stats)))
+names(dd) = names(test_stats)
+dd = rbind(test_stats,dd) 
+names(dd) = c("Method",rep(c(paste("Branch",1:((ncol(dd)-2)/7),sep="_"),"Tree_length"),each=7))
 write.csv(dd, paste(opt$dir,"/",opt$dir,".csv",sep=""),row.names=F)
 
 get_cor(ml,tt,filename = paste(opt$dir,"/","plot_ml_dot_raw.pdf",sep=""))
