@@ -136,6 +136,42 @@ get_cor = function(t1,t2,cl_out = FALSE,filename = "dot_bls.pdf")
   ggsave(plot = pl_g, width = 15, height = 15, dpi = 300, filename = filename)
 }
 
+# t1 = dd table  
+get_bars=function(t1,filename = "bar.pdf")
+{
+    facet_labs = gsub("_"," ",unique(dd_t$branch))
+    p1 = ggbarplot(t1,"variable","value",fill = "variable",color = "white",facet.by=c("test_stats_f","branch"),
+             scales="free",
+             label = TRUE,
+             lab.vjust=0.3,
+             lab.size = 2,
+             sort.val = "none",
+             ylab=F,
+             panel.labs = list(branch = facet_labs),
+             xlab=F)+theme(axis.text.x = element_text(angle = 50, vjust = 1, hjust=1))+scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9","#009e73","#f0e442"))+theme(axis.text.x=element_blank())+labs(fill = "Method")
+   
+    p2 = ggbarplot(t1[t1$test_stats=="MSE",],"variable","value",fill = "variable",color = "white",
+                   facet.by=c("branch"),
+                   scales="free",
+                   label = F,
+                   ylab=F,
+                   xlab=F,
+                   ncol=6,
+                   panel.labs = list(branch = facet_labs))+ theme(axis.text.x = element_text(angle = 50, vjust = 1, hjust=1))+ scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9","#009e73","#f0e442"))+theme(axis.text.x=element_blank())+ labs(fill = "Method")
+   
+   ggsave(plot = p1, width = 20, height = 20, dpi = 300, filename = paste("all_",filename,sep="")) 
+   ggsave(plot = p2, width = 10, height = 5, dpi = 300, filename = paste("mse_",filename,sep=""))
+    
+    
+
+}    
+
+ggbarplot(dd_t,"variable","value",fill = "variable",color = "white",facet.by=c("test_stats_f","branch"),scales="free",label = TRUE,lab.vjust=0.3,lab.size = 2,sort.val = "none",ylab=F,xlab=F)+ theme(axis.text.x = element_text(angle = 50, vjust = 1, hjust=1))
+
+
+
+
+
 dir.create(opt$dir)
 
 cat("Read true\n")
@@ -160,16 +196,35 @@ dd = data.frame(rbind(cor_test(d_cnn_noreg,"CNN"),
                     cor_test(d_mlp,"MLP-ROE"),
                     cor_test(d_ml,"ML")
                    ))
+#write.table(dd,"test_tab.txt",quote=F,row.names=F)
+dd_t = data.frame(t(dd)) 
+names(dd_t) = dd_t[1,]
+dd_t=dd_t[-1,]
+test_stats = rep(c("MSE","MAE","Rho","P_Rho","Bias","D","P_D"),(ncol(dd)-1)/7)
+dd_t$test_stats = test_stats
+branch_names = rep(c(paste("Branch",1:((ncol(dd)-2)/7),sep="_"),"Tree_length"),each=7)
+dd_t$branch=branch_names
+dd_t=melt(dd_t, measure.vars=c("CNN","CNN-ROE","MLP","MLP-ROE","ML"))
+dd_t$value=as.numeric(dd_t$value)
+dd_t$test_stats_f=factor(dd_t$test_stats,levels=c("MSE","MAE","Rho","P_Rho","Bias","D","P_D"))
 
-data.frame(t(tt))
+ggbarplot(dd_t[dd_t$test_stats=="Bias",],"variable","value",fill = "variable",facet.by="branch",scales = "free",nrow = 1,label = TRUE,short.panel.labs=TRUE,lab.size = 3,xlab = FALSE,label.pos = "in",lab.nb.digits=4)
+
+
+
 
 
 test_stats = c(" ",rep(c("MSE","MAE","Rho","P_Rho","Bias","D","P_D"),(ncol(dd)-1)/7))
 test_stats = data.frame(t(data.frame(test_stats)))
-names(dd) = names(test_stats)
-dd = rbind(test_stats,dd) 
-names(dd) = c("Method",rep(c(paste("Branch",1:((ncol(dd)-2)/7),sep="_"),"Tree_length"),each=7))
-write.csv(dd, paste(opt$dir,"/",opt$dir,".csv",sep=""),row.names=F)
+branch_names = c("Method",rep(c(paste("Branch",1:((ncol(dd)-2)/7),sep="_"),"Tree_length"),each=7))
+names(test_stats) = names(branch_names)
+names(dd) = names(branch_names)
+print(head(test_stats))
+print(head(branch_names))
+print(head(dd))
+dd = rbind(branch_names,test_stats,dd) 
+#names(dd) = c("Method",rep(c(paste("Branch",1:((ncol(dd)-2)/7),sep="_"),"Tree_length"),each=7))
+write.csv(dd, paste(opt$dir,"/",opt$dir,".csv",sep=""),row.names=F,col.names=F)
 
 get_cor(ml,tt,filename = paste(opt$dir,"/","plot_ml_dot_raw.pdf",sep=""))
 get_cor(cnn,tt,filename =  paste(opt$dir,"/","plot_cnn_dot_raw.pdf",sep=""))
