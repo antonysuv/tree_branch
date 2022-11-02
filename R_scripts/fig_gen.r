@@ -72,7 +72,7 @@ data_prep=function(t1,t2,cl_out = FALSE, methodname = "Method")
     t1_t2 = data.frame(Method = methodname, br_id = t1$variable,
                        estimated_brl = t1$value,
                        true_brl = t2$value,
-                       residual = t1$value - t2$value,
+                       residual = t2$value - t1$value,
                        se = (t1$value - t2$value)^2,
                        ae = abs(t1$value - t2$value))
     n_br = length(unique(t1_t2$br_id))
@@ -101,7 +101,7 @@ prep_all=function(cnn,cnn_roe,mlp,mlp_roe,ml,true_brl,clean = FALSE)
 # Over-under estimation violin plot 
 get_violin=function(t1,filename = "violin.pdf")
 {
-    my_q = quantile(t1$residual,probs = seq(0, 1, 0.01))
+    my_q = quantile(t1$residual,probs = seq(0, 1, 0.001))
     n_col = length(unique(t1$br_id))
     facet_labs = gsub("_"," ",unique(t1$br_id))
     p = ggviolin(t1, 
@@ -115,15 +115,15 @@ get_violin=function(t1,filename = "violin.pdf")
                  panel.labs = list(br_id = facet_labs),
                  size=0.1,
                  draw_quantiles = 0.5)+
-                 scale_y_continuous(limits = c(my_q["1%"], my_q["99%"]))+
+                 scale_y_continuous(limits = c(my_q["0.1%"], my_q["99.9%"]))+
                  theme(axis.text.x=element_blank())+
                  geom_hline(yintercept=0, linetype="solid", color = "red", size=0.3)+labs(fill = "Method:")
     
-    fracs = tapply(t1$residual>=0,list(t1$Method,t1$br_id),sum)/tapply(t1$residual<0,list(t1$Method,t1$br_id),sum)
+    fracs = tapply(t1$residual<0,list(t1$Method,t1$br_id),sum)/tapply(t1$residual>=0,list(t1$Method,t1$br_id),sum)
     n_comparisons = (tapply(t1$residual>=0,list(t1$Method,t1$br_id),sum)+tapply(t1$residual<0,list(t1$Method,t1$br_id),sum))[1,1]
     fracs = melt(fracs)
     names(fracs)=c("Method","br_id","frac")
-    n_over = tapply(t1$residual>=0,list(t1$Method,t1$br_id),sum)
+    n_over = tapply(t1$residual<0,list(t1$Method,t1$br_id),sum)
     fracs$nover = melt(n_over)$value  
     fracs$pval = round(sapply(fracs$nover,function(f) binom.test(f,n=n_comparisons)$p.val),3)
     fracs$my_col = ifelse(fracs$frac<1 & fracs$pval < 0.05,"blue",ifelse(fracs$frac>1 & fracs$pval < 0.05,"red","black"))                       
@@ -131,7 +131,7 @@ get_violin=function(t1,filename = "violin.pdf")
     #coordinates for 5 methods per facet
     #Order of labels 
     fracs$x = c(1,2,5,3,4)
-    fracs$y = my_q["99%"]
+    fracs$y = my_q["99.9%"]
     p1 = p+geom_text(data = fracs,mapping = aes(x = x, y = y, label = round(frac,2)),color = fracs$my_col,size=2.5)
     ggsave(plot = p1, width = n_col+4, height = 5, dpi = 300, filename = filename) 
     return(p1)                          
