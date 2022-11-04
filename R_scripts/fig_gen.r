@@ -130,7 +130,7 @@ get_violin=function(t1,filename = "violin.pdf")
     #target = c("CNN","CNN-ROE","MLP","MLP-ROE","ML")
     #coordinates for 5 methods per facet
     #Order of labels 
-    fracs$x = c(1,2,5,3,4)
+    fracs$x = c(1,2,3,4,5)
     fracs$y = my_q["99.9%"]
     p1 = p+geom_text(data = fracs,mapping = aes(x = x, y = y, label = round(frac,2)),color = fracs$my_col,size=2.5)
     ggsave(plot = p1, width = n_col+4, height = 5, dpi = 300, filename = filename) 

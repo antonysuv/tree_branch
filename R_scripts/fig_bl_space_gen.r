@@ -43,7 +43,9 @@ data_prep=function(t1,t2,bl_coor, methodname = "Method")
   
     bl_coor$MSE = apply((t2-t1)^2,1,mean)
     bl_coor$MAE = apply(abs(t2-t1),1,mean)
+    bl_coor$Error = apply(abs(t2-t1)/t2,1,mean)
     bl_coor$Method = methodname
+    
     return(bl_coor)
 
 }  
@@ -64,6 +66,7 @@ prep_all=function(cnn,cnn_roe,mlp,mlp_roe,ml,true_brl,bl_coor)
 
 get_blspace=function(t1,stat,minq,maxq,dir_name)
 {
+    
     
     
     my_q = quantile(t1[,stat],probs=seq(0,1,0.01))
@@ -107,3 +110,4 @@ d_master = prep_all(cnn,cnn_roe,mlp,mlp_roe,ml,true_brl,bl_coord)
 
 get_blspace(d_master,"MSE","25%","75%",opt$dir)
 get_blspace(d_master,"MAE","25%","75%",opt$dir)
+get_blspace(d_master,"Error","25%","75%",opt$dir)
