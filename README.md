@@ -1,8 +1,5 @@
 # Estimation of branch lengths using deep learning
-Multilayer perceptron | Convolutional neural network
-:-------------------------:|:-------------------------:
-![3D rotating gif](https://github.com/antonysuv/tree_branch/blob/main/img/mlp_intraslice_knn_5_dropout_0.0_epoch.gif) | ![3D rotating gif](https://github.com/antonysuv/tree_branch/blob/main/img/cnn_intraslice_knn_2_dropout_0.0_epoch.gif)
-![3D rotating gif](https://github.com/antonysuv/tree_branch/blob/main/img/mlp_intraslice_knn_5_dropout_0.0_valloss.gif) | ![3D rotating gif](https://github.com/antonysuv/tree_branch/blob/main/img/cnn_intraslice_knn_2_dropout_0.0_valloss.gif)
+![alt text](https://github.com/antonysuv/tree_branch/blob/main/img/Fig1.pdf)
 ## Pipeline overview 
 ### 1) Generate newick trees with branch lengths  
 ```
