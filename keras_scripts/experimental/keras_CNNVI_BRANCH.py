@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import tensorflow as tf
 import time
-import pandas
 from itertools import product
 import sys, argparse, os
 import numpy as np
@@ -35,7 +34,7 @@ def aggregate_Yinput(Y_files_in):
     Y_aggr = []
     for Y_file in Y_files_in:
         #Log transforming branch lengths to avoid negative values
-        Y_part = np.log(np.genfromtxt(Y_file))
+        Y_part = np.sqrt(np.genfromtxt(Y_file))
         Y_aggr.append(Y_part)
     Y_aggr = np.array(Y_aggr)
     Y_aggr = np.concatenate(Y_aggr)
@@ -52,7 +51,7 @@ def mc_dropout(X_test,Y_test, model):
         brls_eval.append(evals_reg)
         brls_posterior.append(brls)
     
-    brls_exped = np.exp(np.concatenate(brls_posterior,axis=-1))
+    brls_exped = np.power(np.concatenate(brls_posterior,axis=-1),2)
     return brls_exped, brls_eval
     
 def posterior_summary(brls_posterior, Y_test):

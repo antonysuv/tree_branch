@@ -3,7 +3,7 @@ import tensorflow as tf
 import time
 import sys, argparse, os
 import numpy as np
-from itertools import product
+from itertools import product, combinations
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.layers import Input, Dense, Flatten, Dropout, BatchNormalization, ZeroPadding2D
 from tensorflow.keras.layers import Conv2D
@@ -36,25 +36,25 @@ def aggregate_Yinput(Y_files_in):
     return(Y_aggr)
 
 
-def get_site_patterns(array_in):
-    N_alns = array_in.shape[0]
-    N_taxa = array_in.shape[1]
-    character_alphabet = list(map(str,np.unique(array_in)))
-    character_alphabet = [item for item in character_alphabet if item != '-15']
-    site_patterns = list(product(character_alphabet,repeat = N_taxa))
-    site_patterns = list(map('_'.join,site_patterns))
-    print(f"\nTotal site patterns: {len(site_patterns)}")
-    dtype = [tuple([i,"f8"]) for i in site_patterns]
-    struc_array = np.zeros(N_alns, dtype=dtype)
-    #dic_patterns = dict.fromkeys(site_patterns,np.repeat(0,N_alns))
-    for i in range(N_alns):
-        aln = array_in[i,:,:]
-        aln = aln[:,(aln != -15).any(axis=0)]
-        Aln_length = aln.shape[1] 
-        for s in range(Aln_length):     
-            array_key = '_'.join((map(str,aln[:,s].flatten())))
-            struc_array[array_key][i]+=1/Aln_length  
-    return(struc_array.view((float,len(struc_array.dtype.names))))     
+#def get_site_patterns(array_in):
+#    N_alns = array_in.shape[0]
+#    N_taxa = array_in.shape[1]
+#    character_alphabet = list(map(str,np.unique(array_in)))
+#    character_alphabet = [item for item in character_alphabet if item != '-15']
+#    site_patterns = list(product(character_alphabet,repeat = N_taxa))
+#    site_patterns = list(map('_'.join,site_patterns))
+#    print(f"\nTotal site patterns: {len(site_patterns)}")
+#    dtype = [tuple([i,"f8"]) for i in site_patterns]
+#    struc_array = np.zeros(N_alns, dtype=dtype)
+#    #dic_patterns = dict.fromkeys(site_patterns,np.repeat(0,N_alns))
+#    for i in range(N_alns):
+#        aln = array_in[i,:,:]
+#        aln = aln[:,(aln != -15).any(axis=0)]
+#        Aln_length = aln.shape[1] 
+#        for s in range(Aln_length):     
+#            array_key = '_'.join((map(str,aln[:,s].flatten())))
+#            struc_array[array_key][i]+=1/Aln_length  
+#    return(struc_array.view((float,len(struc_array.dtype.names))))     
 
 
 #Regression: inference of branch lengths of unrooted trees from site patterns  
@@ -118,17 +118,17 @@ def main():
     print("\n==========Reading training data==========")
     print(f"\nConcatenating {args.TRAIN} X datasets in order")
     X_train = aggregate_Xinput(args.TRAIN)
-    print(f"N taxa: {X_train.shape[1]}\nAlignment length: {X_train.shape[2]}\nN alignments for training: {X_train.shape[0]}")
-    print("\nExtracting site patterns for TRAIN data, it may take a while")
-    X_train = get_site_patterns(X_train) 
+    #print(f"N taxa: {X_train.shape[1]}\nAlignment length: {X_train.shape[2]}\nN alignments for training: {X_train.shape[0]}")
+    #print("\nExtracting site patterns for TRAIN data, it may take a while")
+    #X_train = get_site_patterns(X_train) 
     Y_train = aggregate_Yinput(args.LABTRAIN)
     
     print("\n==========Reading testing data==========")
     print(f"\nConcatenating {args.TEST} X datasets in order")
     X_test = aggregate_Xinput(args.TEST)
-    print(f"N taxa: {X_test.shape[1]}\nAlignment length: {X_test.shape[2]}\nN alignments for testing: {X_test.shape[0]}")
-    print("\nExtracting site patterns for TEST data, it may take a while")
-    X_test = get_site_patterns(X_test) 
+    #print(f"N taxa: {X_test.shape[1]}\nAlignment length: {X_test.shape[2]}\nN alignments for testing: {X_test.shape[0]}")
+    #print("\nExtracting site patterns for TEST data, it may take a while")
+    #X_test = get_site_patterns(X_test) 
     Y_test = aggregate_Yinput(args.LABTEST)
  
     if args.TRANS == "none":
@@ -182,7 +182,7 @@ def main():
         np.savetxt("brls.evaluated.mlp.txt",evals_reg,fmt='%f')
         np.savetxt("brls.predicted.mlp.txt",bls,fmt='%f')
         np.savetxt("brls.predicted_train.mlp.txt",train_bls,fmt='%f')
-    
+        np.savetxt("brls.predicted.mlp.reg.txt",bls_regs,fmt='%f')
     
     
     #Saving model

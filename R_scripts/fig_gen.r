@@ -3,6 +3,7 @@ library("ggpubr")
 library("reshape")
 library("optparse")
 library("plyr")
+library("stringr")
 options(scipen = 100000000)
 #Caution: warnings are disabled 
 options(warn=-1)
@@ -78,6 +79,7 @@ data_prep=function(t1,t2,cl_out = FALSE, methodname = "Method")
     n_br = length(unique(t1_t2$br_id))
     br_ids = c(paste("Branch",1:(n_br-1),sep="_"),"Tree_length")
     t1_t2$br_id = rep(br_ids,table(t1_t2$br_id))
+    t1_t2$br_id=factor(t1_t2$br_id,levels=str_sort(unique(t1_t2$br_id), numeric = TRUE))
     return(t1_t2)    
 }
 
@@ -156,7 +158,7 @@ get_cor=function(t1,filename = "corr.pdf")
     stats = melt(tapply(t1$se,list(t1$Method,t1$br_id),mean))
     stats$mae = melt(tapply(t1$ae,list(t1$Method,t1$br_id),mean))$value 
     names(stats)=c("Method","br_id","MSE","MAE")
-    stats$er=paste(paste("MSA:",round(stats$MSE,5),sep=""), paste("\nMAE:",round(stats$MAE,5),sep=""))
+    stats$er=paste(paste("MSE:",round(stats$MSE,5),sep=""), paste("\nMAE:",round(stats$MAE,5),sep=""))
     p1 = p + geom_text(data = stats,mapping = aes(x = -Inf, y = Inf, label = er),hjust = -0.1, vjust = 1.1,color = "purple",size=2.5)
     ggsave(plot = p1, width = n_col, height = 6, dpi = 300, filename = filename) 
     return(p1)
@@ -251,7 +253,12 @@ get_stats=function(t1, filename = "bars_bls")
     
    #Save table with stats
    write.csv(cast(my_stats_m,Method~variable~br_id),paste(filename,"_stats_all.csv",sep=""),row.names=T)
-   return(p1)
+   #Save stats into separate tables  
+   for (i in (unique(my_stats_m$variable)))
+   { 
+       write.csv(cast(my_stats_m[my_stats_m$variable==i,],Method~variable~br_id),paste(filename,"_stats_",i,".csv",sep=""),row.names=T)
+   }
+       return(p1)
 }    
 
 

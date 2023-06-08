@@ -94,6 +94,14 @@ alisim_input_generate.r -d bd,turnover,root_age,clock_rate -t '((A,B),(C,D));'
 | 10 | 0, 0.5, 0.9 | 0.001 | 3.3b, UNREST |
 
 
-
-
+### 8-taxon trees 
+```
+alisim_input_generate.r -d exp,10 -t '(A,B,((C,D),((E,F),(G,H))));' -m GTR_1_balance
+alisim_input_generate.r -d exp,10 -t '(A,B,((C,D),(E,(F,(G,H)))));' -m GTR_2_balance
+alisim_input_generate.r -d exp,10 -t '(A,B,((C,(D,E)),(F,(G,H))));' -m GTR_3_balance
+alisim_input_generate.r -d exp,10 -t '(A,B,(C,(D,(E,(F,(G,H))))));' -m GTR_4_balance
+```
+| theta | model | 
+| --- | :---: |
+| 10 | GTR | 
 
